@@ -1,6 +1,6 @@
 package com.slinky.physics.util;
 
-import static java.lang.Math.pow;
+import java.util.Objects;
 
 /**
  * Represents a two-dimensional vector component within the ECS (Entity
@@ -76,7 +76,7 @@ import static java.lang.Math.pow;
  * two-dimensional vector data, making it a core part of the physics engine.
  * </p>
  *
- * @version 1.0
+ * @version 1.1
  * @since   0.1.0
  *
  * @author  Kheagen Haskins
@@ -636,7 +636,7 @@ public class Vec2D {
      */
     public float cross(Vec2D other) {
         return (this.x * other.y) - (this.y * other.x);
-    } // UNTESTED
+    }
 
     /**
      * Rotates this vector by the specified angle <b>around the origin</b>.
@@ -653,12 +653,15 @@ public class Vec2D {
     public Vec2D rotate(float angle) {
         float cosTheta = (float) Math.cos(angle);
         float sinTheta = (float) Math.sin(angle);
-
-        x = x * cosTheta - y * sinTheta;
-        y = x * sinTheta + y * cosTheta;
-
+        
+        float newX = x * cosTheta - y * sinTheta;
+        float newY = x * sinTheta + y * cosTheta;
+        
+        x = newX;
+        y = newY;
+        
         return this;
-    } // UNTESTED
+    }
 
     /**
      * Normalises this vector to have a magnitude of 1 (unit vector), preserving
@@ -770,9 +773,34 @@ public class Vec2D {
      * equal; {@code false} otherwise
      */
     public boolean matches(Vec2D otherVector) {
-        return (Double.compare(x, otherVector.x) == 0) && (Double.compare(y, otherVector.y) == 0);
+        return (Float.compare(x, otherVector.x) == 0) && (Float.compare(y, otherVector.y) == 0);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Vec2D)) {
+            return false;
+        }
+        Vec2D other = (Vec2D) obj;
+        return Float.compare(x, other.x) == 0
+                && Float.compare(y, other.y) == 0;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
     }
 
+    
     /**
      * Returns a string representation of this vector in the format:
      * {@code Vector{x, y}}.
@@ -965,24 +993,36 @@ public class Vec2D {
 
     /**
      * Projects one vector onto another vector.
-     * 
+     *
      * <p>
      * The projection is calculated using the formula:
      * {@code proj_v1_on_v2 = (v1 . v2) / |v2|^2 * v2}.
      * </p>
      *
+     * <p>
+     * If the vector {@code v2} is a zero vector, the method returns a zero
+     * vector, as projecting onto a zero vector is undefined and results in a
+     * zero projection.
+     * </p>
+     *
      * @param v1 the vector to be projected.
      * @param v2 the vector onto which {@code v1} is projected.
      * @return a new vector representing the projection of {@code v1} onto
-     * {@code v2}.
-     * @throws IllegalArgumentException if the vectors are not of the same type.
+     * {@code v2}, or a zero vector if {@code v2} is a zero vector.
      */
     public static Vec2D project(Vec2D v1, Vec2D v2) {
         float dot = v1.dot(v2);
-        float magSq = (float) pow(v2.mag(), 2);
+        float magSq = v2.x * v2.x + v2.y * v2.y;
+
+        if (magSq == 0.0f) {
+            // Projection onto a zero vector is a zero vector
+            return Vec2D.ZERO.copy();
+        }
+
+        float scalar = dot / magSq;
         return new Vec2D(
-                (dot / magSq) * v2.x,
-                (dot / magSq) * v2.y
+                scalar * v2.x,
+                scalar * v2.y
         );
     }
 

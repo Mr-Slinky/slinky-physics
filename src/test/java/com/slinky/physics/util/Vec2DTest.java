@@ -4,6 +4,7 @@ import static java.lang.Math.abs;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -713,6 +714,283 @@ public class Vec2DTest {
         float upperThreshold = scalar + PRECISION_THRESHOLD;
 
         assertTrue(mag >= lowerThreshold && mag <= upperThreshold, mag + " outside of accepted tolerance values: " + lowerThreshold + " - " + upperThreshold);
+    }
+    
+    // ================== Vector Cross Product Function Test ==================== //
+    /**
+     * Provides a stream of arguments for cross product tests. Each argument
+     * consists of two vectors and the expected cross product result.
+     */
+    static Stream<Arguments> crossProductProvider() {
+        return Stream.of(
+                // Basic orthogonal vectors
+                Arguments.of(new Vec2D(1, 0),   new Vec2D(0, 1), 1.0f),
+                Arguments.of(new Vec2D(0, 1),   new Vec2D(1, 0), -1.0f),
+                // Parallel vectors
+                Arguments.of(new Vec2D(2, 2),   new Vec2D(4, 4), 0.0f),
+                Arguments.of(new Vec2D(-3, -3), new Vec2D(6, 6), 0.0f),
+                // Opposite vectors
+                Arguments.of(new Vec2D(1, 1),   new Vec2D(-1, -1), 0.0f),
+                // Zero vectors
+                Arguments.of(new Vec2D(0, 0),   new Vec2D(0, 0), 0.0f),
+                Arguments.of(new Vec2D(1, 0),   new Vec2D(0, 0), 0.0f),
+                Arguments.of(new Vec2D(0, 1),   new Vec2D(0, 0), 0.0f),
+                // Vectors with negative components
+                Arguments.of(new Vec2D(3, 4),   new Vec2D(-5, 2), (3 * 2) - (4 * -5)), // 6 + 20 = 26
+                Arguments.of(new Vec2D(-2, 7),  new Vec2D(3, -4), (-2 * -4) - (7 * 3)), // 8 - 21 = -13
+                Arguments.of(new Vec2D(5, -3),  new Vec2D(-2, 6), (5 * 6) - (-3 * -2)) // 30 - 6 = 24
+        );
+    }
+
+    /**
+     * Tests the cross product method with various vector pairs.
+     *
+     * @param v1 The first vector.
+     * @param v2 The second vector.
+     * @param expected The expected cross product result.
+     */
+    @ParameterizedTest(name = "cross({0}, {1}) = {2}")
+    @MethodSource("crossProductProvider")
+    @DisplayName("Compute cross product of two vectors")
+    void testCrossProduct(Vec2D v1, Vec2D v2, float expected) {
+        float result = v1.cross(v2);
+        assertAll(
+                () -> assertEquals(expected, result, 1e-5f,
+                        () -> String.format("Expected cross(%s, %s) to be %f but was %f", v1, v2, expected, result)),
+                // Additionally, verify anti-commutativity: cross(v1, v2) == -cross(v2, v1)
+                () -> {
+                    float reverseResult = v2.cross(v1);
+                    assertEquals(-expected, reverseResult, 1e-5f,
+                            () -> String.format("Expected cross(%s, %s) to be %f but was %f", v2, v1, -expected, reverseResult));
+                }
+        );
+    }
+
+    /**
+     * Tests the cross product method for non-Vec2D inputs. Ensures that passing
+     * null vectors throws NullPointerException.
+     */
+    @Test
+    @DisplayName("Cross product with null vector should throw NullPointerException")
+    void testCrossProductWithNull() {
+        Vec2D v1 = new Vec2D(1, 2);
+        Vec2D v2 = null;
+        assertThrows(NullPointerException.class, () -> v1.cross(v2),
+                "Expected cross product with null to throw NullPointerException");
+    }
+
+    // ==================== Vector Projection Function Test ====================== //
+    /**
+     * Provides a stream of arguments for project tests. Each argument consists
+     * of two vectors and the expected projection result.
+     */
+    static Stream<Arguments> projectProvider() {
+        return Stream.of(
+                // Basic projections
+                Arguments.of(new Vec2D(1, 0), new Vec2D(1, 0), new Vec2D(1, 0)),
+                Arguments.of(new Vec2D(1, 1), new Vec2D(1, 0), new Vec2D(1, 0)),
+                Arguments.of(new Vec2D(1, 1), new Vec2D(0, 1), new Vec2D(0, 1)),
+                Arguments.of(new Vec2D(2, 3), new Vec2D(4, 0), new Vec2D(2, 0)),
+                Arguments.of(new Vec2D(2, 3), new Vec2D(0, 4), new Vec2D(0, 3)),
+                // Projection onto non-unit vectors
+                Arguments.of(new Vec2D(3, 4), new Vec2D(1, 2), new Vec2D(2.2f, 4.4f)),
+                Arguments.of(new Vec2D(-1, 2), new Vec2D(3, -4), new Vec2D(-1.32f, 1.76f)),
+                // Projection onto zero vector (edge case)
+                Arguments.of(new Vec2D(1, 1), new Vec2D(0, 0), new Vec2D(0, 0)),
+                Arguments.of(new Vec2D(5, -3), new Vec2D(0, 0), new Vec2D(0, 0)),
+                // Projection of zero vector onto another vector
+                Arguments.of(new Vec2D(0, 0), new Vec2D(1, 2), new Vec2D(0, 0)),
+                // Projection where v1 is parallel to v2
+                Arguments.of(new Vec2D(2, 2), new Vec2D(1, 1), new Vec2D(2, 2)),
+                Arguments.of(new Vec2D(-3, -3), new Vec2D(1, 1), new Vec2D(-3, -3)),
+                // Projection where v1 is orthogonal to v2
+                Arguments.of(new Vec2D(1, 0), new Vec2D(0, 1), new Vec2D(0, 0)),
+                Arguments.of(new Vec2D(0, 1), new Vec2D(1, 0), new Vec2D(0, 0))
+        );
+    }
+
+    /**
+     * Tests the project method with various vector pairs.
+     *
+     * @param v1 The vector to be projected.
+     * @param v2 The vector onto which v1 is projected.
+     * @param expected The expected projection result.
+     */
+    @ParameterizedTest(name = "project({0}, {1}) = {2}")
+    @MethodSource("projectProvider")
+    @DisplayName("Compute projection of one vector onto another")
+    void testProject(Vec2D v1, Vec2D v2, Vec2D expected) {
+        Vec2D result = Vec2D.project(v1, v2);
+        final float delta = 1e-4f;
+
+        assertAll("Projection Assertions",
+                () -> assertEquals(expected.x(), result.x(), delta,
+                        () -> String.format("Expected x=%.5f, but was x=%.5f", expected.x(), result.x())),
+                () -> assertEquals(expected.y(), result.y(), delta,
+                        () -> String.format("Expected y=%.5f, but was y=%.5f", expected.y(), result.y()))
+        );
+    }
+
+    /**
+     * Tests that projecting onto a zero vector returns a zero vector.
+     */
+    @Test
+    @DisplayName("Project onto zero vector returns zero vector")
+    void testProjectOntoZeroVector() {
+        Vec2D v1 = new Vec2D(5, -3);
+        Vec2D v2 = Vec2D.ZERO.copy();
+        Vec2D expected = Vec2D.ZERO.copy();
+
+        Vec2D result = Vec2D.project(v1, v2);
+
+        assertAll("Projection onto Zero Vector",
+                () -> assertEquals(expected.x(), result.x(), 1e-5f, "Expected x=0.0"),
+                () -> assertEquals(expected.y(), result.y(), 1e-5f, "Expected y=0.0")
+        );
+    }
+
+    /**
+     * Tests that projecting a zero vector onto another vector returns a zero
+     * vector.
+     */
+    @Test
+    @DisplayName("Project zero vector onto another vector returns zero vector")
+    void testProjectZeroVectorOntoAnother() {
+        Vec2D v1 = Vec2D.ZERO.copy();
+        Vec2D v2 = new Vec2D(1, 2);
+        Vec2D expected = Vec2D.ZERO.copy();
+
+        Vec2D result = Vec2D.project(v1, v2);
+
+        assertAll("Projection of Zero Vector",
+                () -> assertEquals(expected.x(), result.x(), 1e-5f, "Expected x=0.0"),
+                () -> assertEquals(expected.y(), result.y(), 1e-5f, "Expected y=0.0")
+        );
+    }
+
+    /**
+     * Tests that passing a null vector as v2 throws NullPointerException.
+     */
+    @Test
+    @DisplayName("Project method with null v2 throws NullPointerException")
+    void testProjectWithNullV2() {
+        Vec2D v1 = new Vec2D(1, 2);
+        Vec2D v2 = null;
+
+        assertThrows(NullPointerException.class, () -> Vec2D.project(v1, v2),
+                "Expected project method to throw NullPointerException when v2 is null");
+    }
+
+    /**
+     * Tests that passing a null vector as v1 throws NullPointerException.
+     */
+    @Test
+    @DisplayName("Project method with null v1 throws NullPointerException")
+    void testProjectWithNullV1() {
+        Vec2D v1 = null;
+        Vec2D v2 = new Vec2D(1, 2);
+
+        assertThrows(NullPointerException.class, () -> Vec2D.project(v1, v2),
+                "Expected project method to throw NullPointerException when v1 is null");
+    }
+    
+    // ==================== Vector Rotation Function Test ====================== //
+    /**
+     * Provides a stream of arguments for rotation tests. Each argument consists
+     * of a vector, an angle in radians, and the expected rotated vector.
+     */
+    static Stream<Arguments> rotationProvider() {
+        return Stream.of(
+                // Rotate by 0 radians (no rotation)
+                Arguments.of(new Vec2D(1, 0), 0.0f, new Vec2D(1, 0)),
+                Arguments.of(new Vec2D(0, 1), 0.0f, new Vec2D(0, 1)),
+                // Rotate by 90 degrees (pi/2 radians)
+                Arguments.of(new Vec2D(1, 0), (float) Math.PI / 2, new Vec2D(0, 1)),
+                Arguments.of(new Vec2D(0, 1), (float) Math.PI / 2, new Vec2D(-1, 0)),
+                // Rotate by 180 degrees (pi radians)
+                Arguments.of(new Vec2D(1, 0), (float) Math.PI, new Vec2D(-1, 0)),
+                Arguments.of(new Vec2D(0, 1), (float) Math.PI, new Vec2D(0, -1)),
+                // Rotate by 270 degrees (3*pi/2 radians)
+                Arguments.of(new Vec2D(1, 0), 3 * (float) Math.PI / 2, new Vec2D(0, -1)),
+                Arguments.of(new Vec2D(0, 1), 3 * (float) Math.PI / 2, new Vec2D(1, 0)),
+                // Rotate by 360 degrees (2*pi radians)
+                Arguments.of(new Vec2D(1, 0), 2 * (float) Math.PI, new Vec2D(1, 0)),
+                Arguments.of(new Vec2D(0, 1), 2 * (float) Math.PI, new Vec2D(0, 1)),
+                // Rotate negative angles
+                Arguments.of(new Vec2D(1, 0), -(float) Math.PI / 2, new Vec2D(0, -1)),
+                Arguments.of(new Vec2D(0, 1), -(float) Math.PI / 2, new Vec2D(1, 0)),
+                // Rotate arbitrary angles
+                Arguments.of(new Vec2D(1, 1), (float) Math.PI / 4, new Vec2D(0, (float) Math.sqrt(2))),
+                Arguments.of(new Vec2D(1, 1), -(float) Math.PI / 4, new Vec2D((float) Math.sqrt(2), 0)),
+                // Rotate zero vector
+                Arguments.of(new Vec2D(0, 0), (float) Math.PI / 3, new Vec2D(0, 0)),
+                // Rotate vectors with negative components
+                Arguments.of(new Vec2D(-1, -1), (float) Math.PI / 2, new Vec2D(1, -1)),
+                Arguments.of(new Vec2D(-2, 3), (float) Math.PI / 3,
+                        new Vec2D(
+                                (-2) * (float) Math.cos(Math.PI / 3) - 3 * (float) Math.sin(Math.PI / 3),
+                                (-2) * (float) Math.sin(Math.PI / 3) + 3 * (float) Math.cos(Math.PI / 3)
+                        ))
+        );
+    }
+
+    /**
+     * Tests the rotate method with various vectors and angles.
+     *
+     * @param original The original vector before rotation.
+     * @param angle The angle in radians to rotate the vector.
+     * @param expectedVec The expected vector after rotation.
+     */
+    @ParameterizedTest(name = "rotate({0}, angle={1}) = {2}")
+    @MethodSource("rotationProvider")
+    @DisplayName("Rotate vector by specified angle")
+    void testRotate(Vec2D original, float angle, Vec2D expectedVec) {
+        Vec2D vectorToRotate = original.copy();
+        Vec2D rotatedVector = vectorToRotate.rotate(angle);
+
+        // Define a small delta for floating point comparison
+        final float delta = 1e-4f;
+
+        assertAll("Rotated Vector Assertions",
+                () -> assertEquals(expectedVec.x(), rotatedVector.x(), delta,
+                        () -> String.format("Expected x=%.5f, but was x=%.5f", expectedVec.x(), rotatedVector.x())),
+                () -> assertEquals(expectedVec.y(), rotatedVector.y(), delta,
+                        () -> String.format("Expected y=%.5f, but was y=%.5f", expectedVec.y(), rotatedVector.y()))
+        );
+    }
+
+    /**
+     * Tests rotating a vector multiple times and ensures consistency.
+     */
+    @Test
+    @DisplayName("Rotate vector multiple times for consistency")
+    void testRotateMultipleTimes() {
+        Vec2D original = new Vec2D(1, 0);
+        Vec2D vector = original.copy();
+        float[] angles = {(float) Math.PI / 2, (float) Math.PI / 2, (float) Math.PI / 2, (float) Math.PI / 2}; // Total 2*pi
+
+        for (float angle : angles) {
+            vector.rotate(angle);
+        }
+
+        assertAll("Multiple Rotations",
+                () -> assertEquals(original.x(), vector.x(), 1e-5f, "After full rotation, x should be original"),
+                () -> assertEquals(original.y(), vector.y(), 1e-5f, "After full rotation, y should be original")
+        );
+    }
+
+    /**
+     * Tests rotating a vector with zero magnitude.
+     */
+    @Test
+    @DisplayName("Rotate zero vector")
+    void testRotateZeroVector() {
+        Vec2D zeroVector = new Vec2D(0, 0);
+        Vec2D rotated = zeroVector.rotate((float) Math.PI / 3);
+        assertAll("Zero Vector Rotation",
+                () -> assertEquals(0.0f, rotated.x(), 1e-5f, "Rotating zero vector x should remain 0"),
+                () -> assertEquals(0.0f, rotated.y(), 1e-5f, "Rotating zero vector y should remain 0")
+        );
     }
 
 }
