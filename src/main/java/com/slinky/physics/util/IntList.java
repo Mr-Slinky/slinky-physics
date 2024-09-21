@@ -401,6 +401,23 @@ public final class IntList {
     }
     
     /**
+     * Removes and returns the last element of the list.
+     *
+     * <p>
+     * This method removes the element at the last position in the list,
+     * reducing its size by one. The removed element is returned to the caller.
+     * If the list is empty, an {@code IndexOutOfBoundsException} will be
+     * thrown.
+     * </p>
+     *
+     * @return the element previously at the last position in the list
+     * @throws IndexOutOfBoundsException if the list is empty
+     */
+    public float pop() {
+        return remove(size() - 1);
+    }
+    
+    /**
      * Removes all occurrences of the specified elements from this list.
      *
      * <p>

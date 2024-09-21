@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -871,6 +870,73 @@ public class FloatListTest {
         assertThrows(IllegalArgumentException.class, () -> {
             testList.setShrinkPercentage(95);
         }, "Setting shrink percentage above 90 should throw IllegalArgumentException");
+    }
+
+    // ============================== Pop Method Tests ============================= //
+    @Test
+    void pop_ShouldReturnLastElement_WhenListIsNotEmpty() {
+        // Arrange
+        testList.add(1.0f);
+        testList.add(2.0f);
+        testList.add(3.0f);
+
+        // Act
+        float result = testList.pop();
+
+        // Assert
+        assertEquals(3.0f, result, "The last element should be 3.0f");
+        assertEquals(2, testList.size(), "The size should decrease by one");
+    }
+
+    @Test
+    void pop_ShouldRemoveLastElement_WhenListIsNotEmpty() {
+        // Arrange
+        testList.add(10.0f);
+        testList.add(20.0f);
+        testList.add(30.0f);
+
+        // Act
+        testList.pop();
+
+        // Assert
+        assertEquals(2, testList.size(), "The list size should decrease by one after pop");
+        assertEquals(20.0f, testList.get(testList.size() - 1), "The new last element should be 20.0f");
+    }
+
+    @Test
+    void pop_ShouldThrowException_WhenListIsEmpty() {
+        // Assert & Act
+        assertThrows(IndexOutOfBoundsException.class, () -> {
+            testList.pop();
+        }, "Popping from an empty list should throw IndexOutOfBoundsException");
+    }
+
+    @Test
+    void pop_ShouldReturnOnlyElement_WhenListHasOneElement() {
+        // Arrange
+        testList.add(5.0f);
+
+        // Act
+        float result = testList.pop();
+
+        // Assert
+        assertEquals(5.0f, result, "The only element in the list should be 5.0f");
+        assertTrue(testList.isEmpty(), "The list should be empty after popping the only element");
+    }
+
+    @Test
+    void pop_ShouldWorkCorrectly_WhenListIsResized() {
+        // Arrange
+        for (int i = 0; i < 100; i++) {
+            testList.add(i * 1.0f);
+        }
+
+        // Act
+        float result = testList.pop();
+
+        // Assert
+        assertEquals(99.0f, result, "The last element should be 99.0f");
+        assertEquals(99, testList.size(), "The list size should be 99 after popping one element");
     }
     
 }

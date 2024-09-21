@@ -969,5 +969,59 @@ public class IntListTest {
             testList.setShrinkPercentage(95);
         }, "Setting shrink percentage above 90 should throw IllegalArgumentException");
     }
-    
+
+    // ============================== Pop Method Tests ============================= //
+    @Test
+    void pop_ShouldReturnLastElement_WhenListIsNotEmpty() {
+        testList.add(1);
+        testList.add(2);
+        testList.add(3);
+
+        float result = testList.pop();
+
+        assertEquals(3.0f, result, "The last element should be 3.0f");
+        assertEquals(2, testList.size(), "The size should decrease by one");
+    }
+
+    @Test
+    void pop_ShouldRemoveLastElement_WhenListIsNotEmpty() {
+        testList.add(10);
+        testList.add(20);
+        testList.add(30);
+
+        testList.pop();
+
+        assertEquals(2, testList.size(), "The list size should decrease by one after pop");
+        assertEquals(20, testList.get(testList.size() - 1), "The new last element should be 20.0f");
+    }
+
+    @Test
+    void pop_ShouldThrowException_WhenListIsEmpty() {
+        assertThrows(IndexOutOfBoundsException.class, () -> {
+            testList.pop();
+        }, "Popping from an empty list should throw IndexOutOfBoundsException");
+    }
+
+    @Test
+    void pop_ShouldReturnOnlyElement_WhenListHasOneElement() {
+        testList.add(5);
+
+        float result = testList.pop();
+
+        assertEquals(5.0f, result, "The only element in the list should be 5.0f");
+        assertTrue(testList.isEmpty(), "The list should be empty after popping the only element");
+    }
+
+    @Test
+    void pop_ShouldWorkCorrectly_WhenListIsResized() {
+        for (int i = 0; i < 100; i++) {
+            testList.add(i * 1);
+        }
+
+        float result = testList.pop();
+
+        assertEquals(99.0f, result, "The last element should be 99.0f");
+        assertEquals(99, testList.size(), "The list size should be 99 after popping one element");
+    }
+        
 }
