@@ -178,6 +178,22 @@ public final class IntList {
     public int size() {
         return this.size;
     }
+    
+    /**
+     * Returns the current capacity of the list.
+     *
+     * <p>
+     * This method provides the total number of elements that the internal array
+     * can hold before it needs to grow. The capacity refers to the length of the
+     * internal array and is distinct from the size of the list, which represents
+     * the number of elements actually stored in the list.
+     * </p>
+     *
+     * @return the current capacity of the list
+     */
+    public int capacity() {
+        return data.length;
+    }
 
     /**
      * Returns {@code true} if the list contains no elements.

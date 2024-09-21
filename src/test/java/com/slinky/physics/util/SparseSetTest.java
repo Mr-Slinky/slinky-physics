@@ -1,4 +1,4 @@
-package com.slinky.physics.components;
+package com.slinky.physics.util;
 
 import com.slinky.physics.base.EntityManager;
 import java.util.stream.Collectors;

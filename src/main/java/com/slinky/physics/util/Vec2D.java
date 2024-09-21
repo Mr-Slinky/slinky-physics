@@ -3,25 +3,20 @@ package com.slinky.physics.util;
 import java.util.Objects;
 
 /**
- * Represents a two-dimensional vector component within the ECS (Entity
- * Component System) design pattern used in the JellySmash game. This class
- * encapsulates the x and y coordinates of a vector, providing basic
- * functionalities to get and set these values.
+ * The {@code Vec2D} class represents a 2D vector. While vector data is stored
+ * in flat arrays for efficient processing, this class serves as a lightweight,
+ * temporary container for vector operations, rather than being used as a
+ * persistent storage structure. By offering a fluent API, it provides an
+ * intuitive way to perform common vector operations like addition, subtraction,
+ * scaling, and normalization in an easy-to-read, chained format.
  *
  * <p>
- * This class is primarily used to represent positional data or movement vectors
- * in the physics calculations of JellySmash. By implementing the
- * {@code Component} interface, it integrates seamlessly into the ECS framework,
- * allowing for flexible manipulation and combination with other components.
+ * This class operates primarily by manipulating vector components directly,
+ * facilitating method chaining to improve code clarity and readability. Each
+ * method returns the current {@code Vec2D} instance, enabling developers to
+ * perform multiple operations in a single, concise statement.
  * </p>
- *
- * <p>
- * The {@code Vec2D} class offers methods that directly manipulate the
- * vector's data, allowing operations such as addition, subtraction, scaling,
- * and division to be performed on vectors in an intuitive and concise manner.
- * These methods return the instance of the vector they operate on, enabling
- * method chaining and thus more readable code.
- * </p>
+ * 
  * <p>
  * For example:
  * </p>
@@ -74,6 +69,33 @@ import java.util.Objects;
  * methods for modifying and retrieving the x and y coordinates. This class is
  * designed to be extendable and reusable across different systems that require
  * two-dimensional vector data, making it a core part of the physics engine.
+ * </p>
+ *
+ * <p>
+ * It is important to note that the {@code Vec2D} class is <b>not
+ * thread-safe</b>. This is a direct consequence of its design as a temporary
+ * housing unit for vector operations, rather than the vector data itself. Since
+ * an instance of {@code Vec2D} can be reused across different vector
+ * operations, multiple threads operating on the same {@code Vec2D} instance may
+ * inadvertently modify its internal state unpredictably, leading to incorrect
+ * results.
+ * </p>
+ *
+ * <p>
+ * Specifically, if one thread modifies the components of the {@code Vec2D}
+ * instance while another thread is using the same instance for a different
+ * operation, the results may become inconsistent. Because vector data is not
+ * encapsulated within the instance but temporarily stored and manipulated,
+ * concurrent access without proper synchronization mechanisms will result in
+ * data races, where the vector's state may change unexpectedly between
+ * operations.
+ * </p>
+ *
+ * <p>
+ * For scenarios where multiple threads need to operate on vectors, it is
+ * recommended to either use separate {@code Vec2D} instances per thread or
+ * implement appropriate synchronization mechanisms to ensure safe access to
+ * shared {@code Vec2D} instances.
  * </p>
  *
  * @version 1.1

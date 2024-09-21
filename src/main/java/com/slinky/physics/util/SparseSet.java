@@ -1,6 +1,5 @@
-package com.slinky.physics.components;
+package com.slinky.physics.util;
 
-import com.slinky.physics.util.IntList;
 import java.util.Arrays;
 
 /**
@@ -45,20 +44,20 @@ import java.util.Arrays;
  * <p>
  * <strong>Example Usage:</strong></p>
  * <pre>{@code
- * // Initialise a SparseSet with a capacity of 1000 entities
- * SparseSet positionComponents = new SparseSet(1000);
+ *     // Initialise a SparseSet with a capacity of 1000 entities
+ *     SparseSet positionComponents = new SparseSet(1000);
  *
- * // Add an entity with ID 42
- * positionComponents.add(42);
+ *     // Add an entity with ID 42
+ *     positionComponents.add(42);
  *
- * // Check if entity 42 has the component
- * if (positionComponents.contains(42)) {
- *     int index = positionComponents.getIndexOf(42);
- *     // Perform operations using the index
- * }
+ *     // Check if entity 42 has the component
+ *     if (positionComponents.contains(42)) {
+ *         int index = positionComponents.getIndexOf(42);
+ *         // Perform operations using the index
+ *     }
  *
- * // Remove entity 42
- * positionComponents.remove(42);
+ *     // Remove entity 42
+ *     positionComponents.remove(42);
  * }</pre>
  *
  * @version 1.1
@@ -100,7 +99,7 @@ public class SparseSet {
         
         this.cap    = entityLimit;
         this.sparse = new int[entityLimit];
-        this.dense  = new IntList(16); // Initial capacity can be adjusted based on expected usage
+        this.dense  = new IntList(); 
 
         Arrays.fill(sparse, -1);
     }
