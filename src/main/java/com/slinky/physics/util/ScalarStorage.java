@@ -5,12 +5,12 @@ import java.util.Arrays;
 /**
  * A high-performance data structure designed to store and manage scalar
  * floating-point data for entities within an ECS (Entity Component System)
- * framework. This class is optimized for scenarios that require rapid access to
+ * framework. This class is optimised for scenarios that require rapid access to
  * floating-point values, making it ideal for use in real-time simulations,
  * physics engines, and games.
  *
  * <p>
- * The {@code ScalarStorage} class organizes scalar data in a flat format, where
+ * The {@code ScalarStorage} class organises scalar data in a flat format, where
  * each entity's value is stored consecutively in a
  * {@link com.slinky.physics.util.FloatList}. This layout enhances cache
  * locality, allowing for faster access times and reduced memory overhead,
@@ -28,9 +28,9 @@ import java.util.Arrays;
  *
  * <p>
  * Additionally, all methods in this class are declared as <b>final</b>,
- * allowing the JVM to aggressively optimize them. This finality guarantees that
+ * allowing the JVM to aggressively optimise them. This finality guarantees that
  * methods will not be overridden, which facilitates faster execution by
- * enabling method inlining and other optimizations that improve runtime
+ * enabling method inlining and other optimisations that improve runtime
  * performance.
  * </p>
  *
@@ -111,7 +111,7 @@ public class ScalarStorage  {
      * The internal array that stores the scalar data in a flat format. Each
      * entity's value is stored consecutively within this {@link FloatList}.
      * This design ensures that values are stored contiguously in memory,
-     * optimizing cache performance and access times during large-scale
+     * optimising cache performance and access times during large-scale
      * simulations.
      *
      * <p>
@@ -142,7 +142,7 @@ public class ScalarStorage  {
      * stored.
      *
      * <p>
-     * The {@code initialEntityCapacity} is used to initialize the size of the
+     * The {@code initialEntityCapacity} is used to initialise the size of the
      * internal {@link FloatList}, which holds the scalar data. If the number of
      * entities exceeds this capacity, the list will resize dynamically, but it
      * will never exceed the {@code maxEntityCapacity}.
@@ -415,7 +415,7 @@ public class ScalarStorage  {
     }
 
     /**
-     * For debugging only; to visualize the state.
+     * For debugging only; to visualise the state.
      *
      * @return a string representation of the ScalarStorage state
      */

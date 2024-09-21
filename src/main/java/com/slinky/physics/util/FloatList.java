@@ -52,7 +52,7 @@ import static java.lang.Integer.max;
  * @version  2.0
  * @since    0.1.0
  *
- * @author   
+ * @author   Kheagen Haskins
  */
 public final class FloatList {
 

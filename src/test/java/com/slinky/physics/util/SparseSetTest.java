@@ -1,6 +1,5 @@
 package com.slinky.physics.util;
 
-import com.slinky.physics.base.EntityManager;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -389,7 +388,7 @@ public class SparseSetTest {
     @Test
     @DisplayName("Add Entities Beyond Entity Limit")
     void testAddEntitiesBeyondEntityLimit() {
-        int entityLimit = EntityManager.ENTITY_LIMIT;
+        int entityLimit = ENTITY_LIMIT;
         SparseSet set = new SparseSet(entityLimit);
         for (int i = 0; i < entityLimit; i++) {
             set.add(i);
@@ -551,7 +550,7 @@ public class SparseSetTest {
     @Test
     @DisplayName("Add Max Integer Entity ID")
     void testAddMaxIntegerEntityId() {
-        int maxID = EntityManager.ENTITY_LIMIT - 1;
+        int maxID = ENTITY_LIMIT - 1;
         sparseSet.add(maxID);
         assertAll("Add max integer entity ID",
                 () -> assertThrows(IndexOutOfBoundsException.class, () -> sparseSet.add(maxID + 1)),

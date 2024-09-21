@@ -41,7 +41,7 @@ public enum Component {
      * Bit flag value: {@code 0b1} (1)
      * </p>
      */
-    POSITION(0b1),
+    POSITION(1),
     
     /**
      * Represents the velocity of an entity, specifically its linear velocity.
@@ -53,7 +53,7 @@ public enum Component {
      * Bit flag value: {@code 0b10} (2)
      * </p>
      */
-    VELOCITY(0b10),
+    VELOCITY(1 << 1),
     
     /**
      * Represents the accumulated forces acting on an entity. These forces are
@@ -64,7 +64,7 @@ public enum Component {
      * Bit flag value: {@code 0b100} (4)
      * </p>
      */
-    FORCE(0b100),
+    FORCE(1 << 2),
     
     /**
      * Represents the mass of an entity. Mass affects how much an entity resists
@@ -75,7 +75,7 @@ public enum Component {
      * Bit flag value: {@code 0b1000} (8)
      * </p>
      */
-    MASS(0b1000),
+    MASS(1 << 3),
     
     /**
      * Represents the damping factor applied to an entity's velocity. Damping
@@ -87,7 +87,7 @@ public enum Component {
      * Bit flag value: {@code 0b10000} (16)
      * </p>
      */
-    DAMPING(0b10000),
+    DAMPING(1 << 4),
     
     /**
      * Represents the restitution or bounciness of an entity. Restitution is
@@ -100,7 +100,7 @@ public enum Component {
      * Bit flag value: {@code 0b100000} (32)
      * </p>
      */
-    RESTITUTION(0b100000),
+    RESTITUTION(1 << 5),
     
     /**
      * Represents the lifespan of an entity in the simulation. The lifespan
@@ -112,7 +112,7 @@ public enum Component {
      * Bit flag value: {@code 0b1000000} (64)
      * </p>
      */
-    LIFE_TIME(0b1000000);
+    LIFE_TIME(1 << 6);
 
     /**
      * The bit flag associated with the component. Each component is represented

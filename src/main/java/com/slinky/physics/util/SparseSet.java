@@ -27,22 +27,7 @@ import java.util.Arrays;
  * entity to be removed with the last entity in the dense list, maintaining
  * continuity without leaving gaps.</li>
  * </ul>
- * <p>
- * Design Considerations:
- * </p>
- * <ul>
- * <li><strong>Error Handling:</strong> Basic validation is performed on entity
- * IDs to ensure they are within valid bounds. More extensive error checking is deferred
- * to higher-level systems in order to maintain performance.</li>
- * <li><strong>Immutability of Static Constants:</strong> If static instances
- * (e.g., `EMPTY_SPARSE_SET`) are introduced in future, ensure they are immutable
- * to prevent accidental modifications.</li>
- * <li><strong>Thread Safety:</strong> This implementation is not thread-safe.
- * External synchronisation is required if `SparseSet` instances are accessed
- * concurrently.</li>
- * </ul>
- * <p>
- * <strong>Example Usage:</strong></p>
+ * <p><strong>Example Usage:</strong></p>
  * <pre>{@code
  *     // Initialise a SparseSet with a capacity of 1000 entities
  *     SparseSet positionComponents = new SparseSet(1000);

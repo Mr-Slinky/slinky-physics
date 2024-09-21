@@ -429,7 +429,7 @@ public final class IntList {
      * @return the element previously at the last position in the list
      * @throws IndexOutOfBoundsException if the list is empty
      */
-    public float pop() {
+    public int pop() {
         return remove(size() - 1);
     }
     
