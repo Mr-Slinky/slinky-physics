@@ -1,5 +1,9 @@
 package com.slinky.physics.util;
 
+import com.slinky.physics.components.PositionManager;
+import com.slinky.physics.components.VelocityManager;
+import com.slinky.physics.components.ForceManager;
+
 import java.util.Arrays;
 
 /**
@@ -19,17 +23,34 @@ import java.util.Arrays;
  * {@link com.slinky.physics.util.SparseSet}.
  * </p>
  *
+ * <p>
+ * This class is <b>sealed</b>, allowing only specific subclasses—namely
+ * {@code PositionManager}, {@code VelocityManager}, and {@code ForceManager}—to
+ * extend it. This ensures the correct usage of the class in context and
+ * prevents unintended inheritance outside of these permitted components.
+ * </p>
+ *
+ * <p>
+ * Additionally, all methods in this class are declared as <b>final</b>,
+ * allowing the JVM to aggressively optimise them. This finality guarantees that
+ * methods will not be overridden, which facilitates faster execution by
+ * enabling method inlining and other optimisations that improve runtime
+ * performance.
+ * </p>
+ *
  * <h2>Core Features</h2>
  * <ul>
- *   <li><b>Efficient ID management:</b> The {@code SparseSet} tracks entity IDs, 
+ *   <li><b>Efficient ID management:</b> The {@code SparseSet} tracks entity IDs,
  *   allowing for fast addition, removal, and lookup of entities.</li>
- *   <li><b>Interleaved data layout:</b> The x and y components of vectors are stored 
- *   next to each other in memory, which improves memory access patterns and cache efficiency.</li>
- *   <li><b>Memory efficiency:</b> The class is designed to handle thousands of entities 
- *   with minimal memory overhead and supports dynamic resizing of the underlying data arrays.</li>
- *   <li><b>Swap and pop removal:</b> When a vector is removed, the last vector in the 
- *   list is swapped into its position, ensuring that data access remains contiguous and 
- *   efficient without leaving gaps in memory.</li>
+ *   <li><b>Interleaved data layout:</b> The x and y components of vectors are
+ *   stored next to each other in memory, which improves memory access patterns
+ *   and cache efficiency.</li>
+ *   <li><b>Memory efficiency:</b> The class is designed to handle thousands of
+ *   entities with minimal memory overhead and supports dynamic resizing of the
+ *   underlying data arrays.</li>
+ *   <li><b>Swap and pop removal:</b> When a vector is removed, the last vector in
+ *   the list is swapped into its position, ensuring that data access remains
+ *   contiguous and efficient without leaving gaps in memory.</li>
  * </ul>
  *
  * <h2>Usage</h2>
@@ -66,33 +87,17 @@ import java.util.Arrays;
  * Similarly, the {@link com.slinky.physics.util.SparseSet} ensures that entity
  * IDs are managed efficiently, even as entities are added and removed.
  * </p>
- *
- * <h2>Thread Safety</h2>
- * <p>
- * This class is not thread-safe. If multiple threads access a
- * {@code VectorStorage} instance concurrently, external synchronisation must be
- * provided to ensure safe operations. Failure to do so may result in data
- * corruption or undefined behaviour.
- * </p>
- *
- * <h2>Exception Handling</h2>
- * <ul>
- *   <li>{@code IllegalArgumentException}: Thrown if an invalid entity ID is passed 
- *   to methods like {@link #add}, {@link #remove}, or {@link #getX}.</li>
- *   <li>{@code IllegalStateException}: Thrown if the storage exceeds its maximum 
- *   entity capacity.</li>
- * </ul>
  * 
  * @version 2.0
  * @since   0.1.0
  * 
- * @see com.slinky.physics.util.FloatList
- * @see com.slinky.physics.util.IntList
- * @see com.slinky.physics.util.SparseSet
+ * @see     com.slinky.physics.util.FloatList
+ * @see     com.slinky.physics.util.IntList
+ * @see     com.slinky.physics.util.SparseSet
  * 
  * @author Kheagen Haskins
  */
-public final class VectorStorage {
+public sealed class VectorStorage permits PositionManager, VelocityManager, ForceManager {
     
     // ============================== Fields ================================ //
     /**
@@ -186,7 +191,7 @@ public final class VectorStorage {
      *
      * @return the number of entities in this storage
      */
-    public synchronized int size() {
+    public final synchronized int size() {
         return sparseSet.size();
     }
 
@@ -203,7 +208,7 @@ public final class VectorStorage {
      *
      * @return the maximum entity capacity of this storage
      */
-    public synchronized int getMaxEntityCapacity() {
+    public final synchronized int getMaxEntityCapacity() {
         return maxCap;
     }
 
@@ -220,7 +225,7 @@ public final class VectorStorage {
      *
      * @return the internal {@code FloatList} storing the vector data
      */
-    public synchronized FloatList getVectorData() {
+    public final synchronized FloatList getVectorData() {
         return vectorData;
     }
 
@@ -236,7 +241,7 @@ public final class VectorStorage {
      *
      * @return an {@code IntList} containing the active entity IDs
      */
-    public synchronized IntList getEntityIds() {
+    public final synchronized IntList getEntityIds() {
         return sparseSet.dense();
     }
     
@@ -265,7 +270,7 @@ public final class VectorStorage {
      *         or already exists
      * @throws IllegalStateException if the storage has reached maximum capacity
      */
-    public synchronized void add(int entityId, float x, float y) {
+    public final synchronized void add(int entityId, float x, float y) {
         if (size() >= maxCap) {
             throw new IllegalStateException("Maximum capacity reached: " + maxCap);
         }
@@ -301,7 +306,7 @@ public final class VectorStorage {
      * @param entityId the ID of the entity whose vector is to be removed
      * @throws IllegalArgumentException if the entity does not exist
      */
-    public synchronized void remove(int entityId) {
+    public final synchronized void remove(int entityId) {
         if (!sparseSet.contains(entityId)) {
             throw new IllegalArgumentException("Entity does not exist: " + entityId);
         }
@@ -336,7 +341,7 @@ public final class VectorStorage {
      * @param entityId the ID of the entity to check
      * @return {@code true} if the entity exists, {@code false} otherwise
      */
-    public synchronized boolean contains(int entityId) {
+    public final synchronized boolean contains(int entityId) {
         return sparseSet.contains(entityId);
     }
 
@@ -354,7 +359,7 @@ public final class VectorStorage {
      * @return the x-component of the vector for the specified entity
      * @throws IllegalArgumentException if the entity does not exist
      */
-    public synchronized float getX(int entityId) {
+    public final synchronized float getX(int entityId) {
         int index = sparseSet.getIndexOf(entityId);
         return vectorData.get(index * 2);
     }
@@ -373,7 +378,7 @@ public final class VectorStorage {
      * @return the y-component of the vector for the specified entity
      * @throws IllegalArgumentException if the entity does not exist
      */
-    public synchronized float getY(int entityId) {
+    public final synchronized float getY(int entityId) {
         int index = sparseSet.getIndexOf(entityId);
         return vectorData.get(index * 2 + 1);
     }
@@ -390,7 +395,7 @@ public final class VectorStorage {
      * @param x the new x-component to assign to the vector
      * @throws IllegalArgumentException if the entity does not exist
      */
-    public synchronized void setX(int entityId, float x) {
+    public final synchronized void setX(int entityId, float x) {
         int index = sparseSet.getIndexOf(entityId);
         vectorData.set(index * 2, x);
     }
@@ -407,7 +412,7 @@ public final class VectorStorage {
      * @param y the new y-component to assign to the vector
      * @throws IllegalArgumentException if the entity does not exist
      */
-    public synchronized void setY(int entityId, float y) {
+    public final synchronized void setY(int entityId, float y) {
         int index = sparseSet.getIndexOf(entityId);
         vectorData.set(index * 2 + 1, y);
     }
@@ -427,7 +432,7 @@ public final class VectorStorage {
      * @throws IllegalArgumentException if the entity does not exist or if the
      * {@code dest} array has fewer than 2 elements
      */
-    public synchronized void getVectorOf(int entityId, float[] dest) {
+    public final synchronized void getVectorOf(int entityId, float[] dest) {
         if (dest == null || dest.length < 2) {
             throw new IllegalArgumentException("Destination array must have at least two elements.");
         }
@@ -453,7 +458,7 @@ public final class VectorStorage {
      * and the second element is the y-coordinate of the vector
      * @throws IllegalArgumentException if the entity does not exist
      */    
-    public synchronized float[] getVectorOf(int entityId) {
+    public final synchronized float[] getVectorOf(int entityId) {
         float[] vectorComponents = new float[2];
         
         int index           = sparseSet.getIndexOf(entityId);
@@ -476,7 +481,7 @@ public final class VectorStorage {
      * @param y the new y-component to assign to the vector
      * @throws IllegalArgumentException if the entity does not exist
      */
-    public synchronized void setVectorOf(int entityId, float x, float y) {
+    public final synchronized void setVectorOf(int entityId, float x, float y) {
         int index = sparseSet.getIndexOf(entityId);
         vectorData.set(index * 2, x);
         vectorData.set(index * 2 + 1, y);
