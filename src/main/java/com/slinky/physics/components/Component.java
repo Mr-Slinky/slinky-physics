@@ -141,20 +141,4 @@ public enum Component {
         return bit;
     }
     
-    /**
-     * TODO:
-     * Fail Fast Mechanism to quick error catching during developement. Rememeber to remove!
-     */
-    static {
-        for (Component compA : Component.values()) {
-        for (Component compB : Component.values()) {
-            if (compA != compB) {
-                if (compA.bit == compB.bit) {
-                    throw new Error("Components found with matching bitmask bits: " + compA + ", " + compB);
-                }
-            }
-        }
-        }
-    }
-    
 }
