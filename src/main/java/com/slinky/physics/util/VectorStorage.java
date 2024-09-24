@@ -1,14 +1,13 @@
 package com.slinky.physics.util;
 
-import com.slinky.physics.components.PositionManager;
-import com.slinky.physics.components.VelocityManager;
-import com.slinky.physics.components.ForceManager;
-
-import java.util.Arrays;
+import com.slinky.physics.components.data.Vec2D;
+import com.slinky.physics.base.EntityManager;
+import com.slinky.physics.components.Component;
+import com.slinky.physics.components.ComponentManager;
 
 /**
  * A high-performance data structure designed to store and manage 2D vector data
- * (x, y coordinates) for entities within an ECS (Entity Component System)
+ * (x and y coordinates) for entities within an ECS (Entity Component System)
  * framework. This class is optimised for scenarios that require rapid access to
  * floating-point data, making it ideal for use in real-time simulations,
  * physics engines, and games.
@@ -16,88 +15,72 @@ import java.util.Arrays;
  * <p>
  * The {@code VectorStorage} class organises 2D vector data in an interleaved
  * format, where the x and y components of each vector are stored consecutively
- * in a {@link com.slinky.physics.util.FloatList}. This interleaving enhances
- * cache locality, allowing for faster access times and reduced memory overhead,
- * especially when large numbers of entities are being processed. Each vector is
- * associated with an entity ID, which is efficiently managed using a
- * {@link com.slinky.physics.util.SparseSet}.
+ * in a {@link FloatList}. This interleaving enhances cache locality, allowing
+ * for faster access times and reduced memory overhead, especially when large
+ * numbers of entities are being processed. Each vector is associated with an
+ * entity ID, which is efficiently managed using a {@link SparseSet}.
  * </p>
  *
- * <p>
- * This class is <b>sealed</b>, allowing only specific subclasses—namely
- * {@code PositionManager}, {@code VelocityManager}, and {@code ForceManager}—to
- * extend it. This ensures the correct usage of the class in context and
- * prevents unintended inheritance outside of these permitted components.
- * </p>
- *
- * <p>
- * Additionally, all methods in this class are declared as <b>final</b>,
- * allowing the JVM to aggressively optimise them. This finality guarantees that
- * methods will not be overridden, which facilitates faster execution by
- * enabling method inlining and other optimisations that improve runtime
- * performance.
- * </p>
- *
- * <h2>Core Features</h2>
+ * <h2>Key Features:</h2>
  * <ul>
- *   <li><b>Efficient ID management:</b> The {@code SparseSet} tracks entity IDs,
- *   allowing for fast addition, removal, and lookup of entities.</li>
- *   <li><b>Interleaved data layout:</b> The x and y components of vectors are
- *   stored next to each other in memory, which improves memory access patterns
- *   and cache efficiency.</li>
- *   <li><b>Memory efficiency:</b> The class is designed to handle thousands of
- *   entities with minimal memory overhead and supports dynamic resizing of the
- *   underlying data arrays.</li>
- *   <li><b>Swap and pop removal:</b> When a vector is removed, the last vector in
- *   the list is swapped into its position, ensuring that data access remains
- *   contiguous and efficient without leaving gaps in memory.</li>
+ *   <li><b>Efficient Entity Management:</b> Uses a {@link SparseSet} for fast
+ *   addition, removal, and lookup of entities.</li>
+ *   <li><b>Interleaved Data Layout:</b> Stores x and y components contiguously in
+ *   memory to optimise cache performance.</li>
+ *   <li><b>Dynamic Resizing:</b> Supports dynamic resizing up to a specified
+ *   maximum capacity, handling thousands of entities with minimal memory
+ *   overhead.</li>
+ *   <li><b>Swap-and-Pop Removal:</b> Maintains data contiguity by swapping the
+ *   last vector into the position of a removed vector.</li>
  * </ul>
  *
- * <h2>Usage</h2>
- * <p>
- * {@code VectorStorage} is primarily used for storing and manipulating the
- * positions of entities in 2D space. It supports basic operations such as
- * adding new entities, retrieving x/y coordinates, updating vectors, and
- * removing entities.
- * </p>
- *
+ * <h2>Usage Example:</h2>
  * <pre><code>
- *     // Create a VectorStorage instance with an initial capacity of 100 entities
- *     VectorStorage storage = new VectorStorage(100, 1000);
+ *     // Initialise VectorStorage with initial capacity of 100 and max capacity of 1000
+ *     VectorStorage positionStorage = new VectorStorage(Component.POSITION, entityManager, 100, 1000);
  *
- *     // Add a vector for entity 1
- *     storage.add(1, 10.0f, 15.0f);
+ *     // Add a vector for entity ID 1
+ *     positionStorage.add(1, 10.0f, 15.0f);
  *
- *     // Retrieve the x and y coordinates of entity 1
- *     float x = storage.getX(1);
- *     float y = storage.getY(1);
+ *     // Retrieve x and y components for entity ID 1
+ *     float x = positionStorage.getX(1);
+ *     float y = positionStorage.getY(1);
  *
- *     // Update the vector for entity 1
- *     storage.setVector(1, 20.0f, 25.0f);
+ *     // Update the vector for entity ID 1
+ *     positionStorage.setVectorOf(1, 20.0f, 25.0f);
  *
- *     // Remove the vector associated with entity 1
- *     storage.remove(1);
+ *     // Remove the vector for entity ID 1
+ *     positionStorage.remove(1);
  * </code></pre>
  *
- * <h2>Resizing Behaviour</h2>
+ * <h2>Thread Safety:</h2>
  * <p>
- * The internal {@link com.slinky.physics.util.FloatList} resizes dynamically
- * based on the number of stored vectors. When new vectors are added and the
- * list reaches its capacity, it grows by 1.5x to accommodate more data.
- * Similarly, the {@link com.slinky.physics.util.SparseSet} ensures that entity
- * IDs are managed efficiently, even as entities are added and removed.
+ * Methods in this class are synchronised to ensure thread safety in concurrent
+ * environments. This allows multiple threads to interact with the storage
+ * without causing data corruption.
  * </p>
- * 
- * @version 2.0
+ *
+ * <h2>Performance Considerations:</h2>
+ * <p>
+ * By storing data in flat arrays and using primitive types, this class
+ * minimises memory overhead and maximises data locality. The use of final
+ * methods enables the JVM to perform aggressive optimisations like method
+ * inlining, further enhancing performance.
+ * </p>
+ *
+ * @version 3.0
  * @since   0.1.0
+ *
+ * @author  Kheagen Haskins
  * 
  * @see     com.slinky.physics.util.FloatList
  * @see     com.slinky.physics.util.IntList
  * @see     com.slinky.physics.util.SparseSet
- * 
- * @author Kheagen Haskins
+ * @see     Component
+ * @see     ComponentManager
+ * @see     EntityManager
  */
-public sealed class VectorStorage permits PositionManager, VelocityManager, ForceManager {
+public class VectorStorage implements ComponentManager<Vec2D> {
     
     // ============================== Fields ================================ //
     /**
@@ -126,6 +109,11 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
      * </p>
      */
     private final FloatList vectorData;
+    
+    /**
+     * A utility object to hold vector data from the varargs add() method call.
+     */
+    private final Vec2D utilVector = Vec2D.zero();
 
     /**
      * The maximum number of entities that can be stored in this
@@ -139,7 +127,20 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
      * </p>
      */
     private final int maxCap;
+    
+    /**
+     * The specific {@link Component} type that this manager is responsible for.
+     * Each component type is uniquely identified by its associated bitmask.
+     */
+    private final Component componentType;
 
+    /**
+     * The {@code EntityManager} instance that this manager interacts with. The
+     * {@code EntityManager} oversees the lifecycle of entities and their
+     * associations with various components.
+     */
+    protected final EntityManager entityManager;
+    
     // =========================== Constructors ============================= //
     /**
      * Constructs a {@code VectorStorage} with the specified initial capacity
@@ -155,15 +156,17 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
      * it will never exceed the {@code maxEntityCapacity}.
      * </p>
      *
-     * @param initialEntityCapacity the initial number of entities the storage
-     * can hold
-     * @param maxEntityCapacity the maximum number of entities this storage can
-     * manage
+     * @param  componentType the type of component, for example {@link Component#POSITION}
+     * @param  entityManager the {@code EntityManager} managing this component's entities
+     * @param  initialEntityCapacity the initial number of entities the storage
+     *         can hold
+     * @param  maxEntityCapacity the maximum number of entities this storage can
+     *         manage
      * @throws IllegalArgumentException if {@code initialEntityCapacity} is less
-     * than or equal to 0, or if {@code initialEntityCapacity} exceeds
-     * {@code maxEntityCapacity}
+     *         than or equal to 0, or if {@code initialEntityCapacity} exceeds
+     *         {@code maxEntityCapacity}
      */
-    public VectorStorage(int initialEntityCapacity, int maxEntityCapacity) {
+    public VectorStorage(Component componentType, EntityManager entityManager, int initialEntityCapacity, int maxEntityCapacity) {
         if (initialEntityCapacity <= 0) {
             throw new IllegalArgumentException("Initial capacity must be positive");
         }
@@ -171,10 +174,12 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
         if (initialEntityCapacity > maxEntityCapacity) {
             throw new IllegalArgumentException("Initial capacity cannot exceed maximum capacity");
         }
-
-        this.maxCap     = maxEntityCapacity;
-        this.vectorData = new FloatList(initialEntityCapacity * 2);
-        this.sparseSet  = new SparseSet(maxEntityCapacity);
+        
+        this.componentType = componentType;
+        this.entityManager = entityManager;
+        this.maxCap        = maxEntityCapacity;
+        this.vectorData    = new FloatList(initialEntityCapacity * 2);
+        this.sparseSet     = new SparseSet(maxEntityCapacity);
     }
 
     // ============================== Getters =============================== //
@@ -245,32 +250,35 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
         return sparseSet.dense();
     }
     
+    /**
+     * Returns the specific {@link Component} type that this manager is responsible for.
+     *
+     * @return the component type managed by this storage
+     */
+    @Override
+    public final Component getComponent() {
+        return componentType;
+    }
+    
     // ============================ API Methods ============================= //
     /**
-     * Adds a new vector (x, y) for the specified entity.
+     * Adds a vector to the storage for the specified entity.
      *
      * <p>
-     * This method associates the specified {@code entityId} with a 2D vector,
-     * storing the x and y components in the interleaved {@link FloatList}. If
-     * the entity already exists or if the {@code entityId} is out of the valid
-     * range, an exception is thrown. The storage dynamically grows to
-     * accommodate new entities up to the maximum capacity.
-     * </p>
-     *
-     * <p>
-     * Note: The {@code entityId} must be unique and within the bounds of the
-     * current storage capacity. If the maximum capacity is reached, no more
-     * entities can be added.
+     * This method adds the provided {@link Vec2D} vector to the storage associated with
+     * the given {@code entityId}. It ensures that the storage does not exceed its maximum
+     * capacity and that the entity ID is within valid bounds. Upon successful addition,
+     * the entity's bitmask is updated via the {@link EntityManager}.
      * </p>
      *
      * @param entityId the ID of the entity to be added
-     * @param x the x-component of the vector
-     * @param y the y-component of the vector
+     * @param vector the 2D vector to associate with the entity
      * @throws IllegalArgumentException if the {@code entityId} is out of bounds
      *         or already exists
      * @throws IllegalStateException if the storage has reached maximum capacity
      */
-    public final synchronized void add(int entityId, float x, float y) {
+    @Override
+    public final synchronized void add(int entityId, Vec2D vector) {
         if (size() >= maxCap) {
             throw new IllegalStateException("Maximum capacity reached: " + maxCap);
         }
@@ -278,15 +286,65 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
         if (entityId < 0 || entityId >= maxCap) {
             throw new IllegalArgumentException("Entity ID out of bounds: " + entityId);
         }
-
+        
         if (!sparseSet.add(entityId)) {
             throw new IllegalArgumentException("Entity already exists: " + entityId);
         }
-
-        vectorData.add(x);
-        vectorData.add(y);
+        
+        // accepting the possible class cast exception here given the above checks; 
+        // do not want more performance hits
+        vectorData.add(vector.x()); 
+        vectorData.add(vector.y());
+        entityManager.addComponentTo(entityId, componentType); // ensures the entity's bitmask is updated
     }
+    
+     /**
+     * Adds a vector to the storage for the specified entity using variable
+     * arguments.
+     *
+     * <p>
+     * This method expects at least two elements in {@code vectorComponents},
+     * representing the x and y components of the vector. It converts the
+     * provided components into a {@link Vec2D} object and delegates the
+     * addition to the {@link #add(int, Vec2D)} method.
+     * </p>
+     *
+     * @param entityId the ID of the entity to be added
+     * @param vectorComponents the x and y components of the vector
+     * @throws IllegalArgumentException if the {@code entityId} is out of bounds
+     * or already exists, or if fewer than two vector components are provided
+     * @throws IllegalStateException if the storage has reached maximum capacity
+     */
+    @Override
+    public final synchronized void add(int entityId, Object... vectorComponents) {
+        if (vectorComponents.length < 2) {
+            throw new IllegalArgumentException("VectorStorage varargs must have at least two elements");
+        }
 
+        utilVector.setComponents((float) vectorComponents[0], (float) vectorComponents[1]);
+        add(entityId, utilVector);
+    }
+    
+    /**
+     * Assigns the component with a default vector value to the specified entity.
+     *
+     * <p>
+     * This method initialises the component for the given {@code entityId} using a
+     * default vector value of {@code 0f, 0f}. This is useful when the specific scalar
+     * value is not immediately known or will be set later.
+     * </p>
+     *
+     * @param entityId the ID of the entity to which the component will be added with a default value
+     *
+     * @throws IllegalArgumentException if the {@code entityId} is out of bounds
+     *         or already exists
+     * @throws IllegalStateException    if the storage has reached maximum capacity
+     */
+    @Override
+    public final synchronized void add(int entityId) {
+        add(entityId, 0f, 0f);
+    }
+    
     /**
      * Removes the vector associated with the specified entity.
      *
@@ -310,15 +368,15 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
         if (!sparseSet.contains(entityId)) {
             throw new IllegalArgumentException("Entity does not exist: " + entityId);
         }
-
-        int indexToRemove = sparseSet.getIndexOf(entityId);
-        int lastIndex = size() - 1;
+        
+        int indexToRemove = sparseSet.getIndexOf(entityId) << 1;
+        int lastIndex     = (size() - 1) << 1;
 
         // Swap vector data if not removing the last element
         if (indexToRemove != lastIndex) {
             // Swap vector data
-            vectorData.set(indexToRemove * 2, vectorData.get(lastIndex * 2));
-            vectorData.set(indexToRemove * 2 + 1, vectorData.get(lastIndex * 2 + 1));
+            vectorData.set(indexToRemove,     vectorData.get(lastIndex));
+            vectorData.set(indexToRemove + 1, vectorData.get(lastIndex + 1));
         }
 
         // Remove the entity from SparseSet
@@ -327,6 +385,7 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
         // Remove the last vector data (x, y)
         vectorData.pop();
         vectorData.pop();
+        entityManager.removeComponent(entityId, componentType); // ensures the entity's bitmask is updated
     }
 
     /**
@@ -461,9 +520,9 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
     public final synchronized float[] getVectorOf(int entityId) {
         float[] vectorComponents = new float[2];
         
-        int index           = sparseSet.getIndexOf(entityId);
-        vectorComponents[0] = vectorData.get(index * 2);
-        vectorComponents[1] = vectorData.get(index * 2 + 1);
+        int index           = sparseSet.getIndexOf(entityId) << 1;
+        vectorComponents[0] = vectorData.get(index);
+        vectorComponents[1] = vectorData.get(index + 1);
         
         return vectorComponents;
     }
@@ -482,27 +541,26 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
      * @throws IllegalArgumentException if the entity does not exist
      */
     public final synchronized void setVectorOf(int entityId, float x, float y) {
-        int index = sparseSet.getIndexOf(entityId);
-        vectorData.set(index * 2, x);
-        vectorData.set(index * 2 + 1, y);
+        int index = sparseSet.getIndexOf(entityId) << 1; // * 2
+        vectorData.set(index, x);
+        vectorData.set(index + 1, y);
     }
     
     /**
-     * For debugging only; to visualise the state.
+     * Returns a string representation of the current state of the {@code VectorStorage}.
      * 
-     * @return 
+     * <p>
+     * This method is intended for debugging purposes only. It visualises the state
+     * by displaying the contents of the {@link SparseSet} and the interleaved vector
+     * data stored in the {@link FloatList}.
+     * </p>
+     * 
+     * @return a string representing the current state of the storage
      */
     @Override
     public String toString() {
         StringBuilder outp = new StringBuilder();
-        outp.append("IDs:\t").append(Arrays.toString(sparseSet.sparse())).append("\n");
-
-        outp.append("Dense:\t[");
-        for (int i = 0; i < sparseSet.dense().size(); i++) {
-            outp.append(sparseSet.dense().array()[i]).append(", ");
-        }
-        outp.append("]\n");
-        outp.delete(outp.length() - 4, outp.length() - 2);
+        outp.append(sparseSet).append("\n");
         
         outp.append("Data:\t[");
         for (int i = 0; i < vectorData.size(); i++) {
@@ -513,5 +571,5 @@ public sealed class VectorStorage permits PositionManager, VelocityManager, Forc
         
         return outp.toString();
     }
-    
+
 }

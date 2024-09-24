@@ -1,10 +1,12 @@
 package com.slinky.physics.util;
 
+import java.nio.IntBuffer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 
@@ -29,6 +31,12 @@ public class SparseSetTest {
     void setUp() {
         sparseSet = new SparseSet(ENTITY_LIMIT);
     }
+    
+    @AfterEach
+    public void cleanUp() {
+        
+    }
+    
 
     // =========================== Constructors Tests =========================== //
     /**
@@ -64,8 +72,7 @@ public class SparseSetTest {
                 },
                 // Verify that the dense list is empty upon initialization
                 () -> assertEquals(0, set.size(),
-                        "Dense list should be empty after construction")
-        );
+                        "Dense list should be empty after construction"));
     }
 
     /**
@@ -986,20 +993,17 @@ public class SparseSetTest {
         @Test
         @DisplayName("Should handle multiple removals of the same entity gracefully")
         void testMultipleRemovalsOfSameEntity() {
-            // Arrange
             int entityId = 30;
-            boolean firstRemoval = sparseSet.remove(entityId);
+            boolean firstRemoval  = sparseSet.remove(entityId);
             boolean secondRemoval = sparseSet.remove(entityId);
 
-            // Act
             boolean contains = sparseSet.contains(entityId);
             int expectedSize = 4;
 
-            // Assert
             assertAll("Multiple removals of the same entity",
-                    () -> assertTrue(firstRemoval, "First removal should return true"),
+                    () -> assertTrue(firstRemoval,   "First removal should return true"),
                     () -> assertFalse(secondRemoval, "Second removal should return false"),
-                    () -> assertFalse(contains, "SparseSet should not contain the entity after removal"),
+                    () -> assertFalse(contains,      "SparseSet should not contain the entity after removal"),
                     () -> assertEquals(expectedSize, sparseSet.size(),
                             "Size should decrement only once after multiple removals")
             );

@@ -13,16 +13,16 @@ package com.slinky.physics.components;
  *
  * <p>The following components are currently available:</p>
  * <ul>
- *     <li>{@link #POSITION}: Represents the position of an entity in the 2D space.</li>
- *     <li>{@link #VELOCITY}: Represents the linear velocity of the entity.</li>
- *     <li>{@link #FORCE}: Represents the accumulated forces acting on the entity.</li>
- *     <li>{@link #MASS}: Represents the mass of the entity, affecting its inertia.</li>
- *     <li>{@link #DAMPING}: Represents the damping factor applied to the entity, 
- *         which reduces its velocity over time due to drag or friction.</li>
- *     <li>{@link #RESTITUTION}: Represents the bounciness or elasticity of the entity, 
- *         influencing how it responds to collisions.</li>
- *     <li>{@link #LIFE_TIME}: Represents the lifespan of the entity, 
- *         allowing it to exist for a finite number of frames.</li>
+ *   <li>{@link #POSITION}: Represents the position of an entity in the 2D space.</li>
+ *   <li>{@link #VELOCITY}: Represents the linear velocity of the entity.</li>
+ *   <li>{@link #FORCE}: Represents the accumulated forces acting on the entity.</li>
+ *   <li>{@link #MASS}: Represents the mass of the entity, affecting its inertia.</li>
+ *   <li>{@link #DAMPING}: Represents the damping factor applied to the entity, 
+ *       which reduces its velocity over time due to drag or friction.</li>
+ *   <li>{@link #RESTITUTION}: Represents the bounciness or elasticity of the entity, 
+ *       influencing how it responds to collisions.</li>
+ *   <li>{@link #LIFE_TIME}: Represents the lifespan of the entity, 
+ *       allowing it to exist for a finite number of frames.</li>
  * </ul>
  * 
  * @version 1.0
@@ -112,7 +112,10 @@ public enum Component {
      * Bit flag value: {@code 0b1000000} (64)
      * </p>
      */
-    LIFE_TIME(1 << 6);
+    LIFE_TIME(1 << 6),
+    
+    
+    SPRING(1 << 7);
 
     /**
      * The bit flag associated with the component. Each component is represented

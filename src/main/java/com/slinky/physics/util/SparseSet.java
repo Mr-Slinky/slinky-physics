@@ -5,30 +5,33 @@ import java.util.Arrays;
 /**
  * A highly efficient sparse set implementation that leverages primitive arrays,
  * optimised for use within an Entity Component System (ECS) framework.
+ * 
  * <p>
- * The `SparseSet` class manages a collection of entity IDs associated with
- * a specific component. It employs a sparse array (`sparse`) and a dense list
- * (`dense`) to ensure constant-time operations for adding, removing, and
- * verifying the presence of entities. This design minimises memory overhead
- * and maximises performance by avoiding unnecessary object allocations.
+ * The {@code SparseSet} class manages a collection of entity IDs associated
+ * with a specific component. It employs a sparse array ({@code sparse}) and a
+ * dense list ({@code dense}) to ensure constant-time operations for adding,
+ * removing, and verifying the presence of entities. This design minimises
+ * memory overhead and maximises performance by avoiding unnecessary object
+ * allocations.
  * </p>
  * <p>
  * Key Features:
  * </p>
  * <ul>
- * <li><strong>Constant-Time Operations:</strong> Add, remove, and contains
- * checks are performed in O(1) time.</li>
- * <li><strong>Primitive Data Structures:</strong> Utilises primitive `int`
- * arrays and a custom `IntList` to avoid the overhead associated with object wrappers.</li>
- * <li><strong>Efficient Memory Usage:</strong> The sparse array maps entity IDs
- * directly to their indices in the dense list, ensuring minimal memory
- * usage.</li>
- * <li><strong>Optimised Removal:</strong> The removal operation swaps the
- * entity to be removed with the last entity in the dense list, maintaining
- * continuity without leaving gaps.</li>
+ *   <li><strong>Constant-Time Operations:</strong> Add, remove, and contains
+ *   checks are performed in O(1) time.</li>
+ *   <li><strong>Primitive Data Structures:</strong> Uses primitive {@code int}
+ *   arrays and a custom {@code IntList} to avoid the overhead associated with
+ *   object wrappers.</li>
+ *   <li><strong>Efficient Memory Usage:</strong> The sparse array maps entity IDs
+ *   directly to their indices in the dense list, ensuring minimal memory
+ *   usage.</li>
+ *   <li><strong>Optimised Removal:</strong> The removal operation swaps the
+ *   entity to be removed with the last entity in the dense list, maintaining
+ *   continuity without leaving gaps.</li>
  * </ul>
  * <p><strong>Example Usage:</strong></p>
- * <pre>{@code
+ * <pre><code>
  *     // Initialise a SparseSet with a capacity of 1000 entities
  *     SparseSet positionComponents = new SparseSet(1000);
  *
@@ -43,12 +46,12 @@ import java.util.Arrays;
  *
  *     // Remove entity 42
  *     positionComponents.remove(42);
- * }</pre>
+ * </code></pre>
  *
- * @version 1.1
+ * @version 1.2
  * @since   0.1.0
  *
- * @author Kheagen Haskins
+ * @author  Kheagen Haskins
  */
 public class SparseSet {
 
@@ -60,13 +63,13 @@ public class SparseSet {
 
     /**
      * The sparse array mapping entity IDs to their indices in the dense list.
-     * Initialized with -1 for all entries to indicate the absence of entities.
+     * Initialised with -1 for all entries to indicate the absence of entities.
      */
     private final int[] sparse;
 
     /**
      * The dense list storing active entity IDs that possess the component.
-     * Utilizes a custom resizable primitive array to minimize memory overhead.
+     * Uses a custom resizable primitive array to minimise memory overhead.
      */
     private final IntList dense; // resizable primitive array
 
@@ -162,7 +165,7 @@ public class SparseSet {
      * @return {@code true} if the entity was successfully removed,
      * {@code false} if it was not present
      */
-    public boolean remove(int entityId) {
+     public boolean remove(int entityId) {
         if (!contains(entityId)) {
             return false; // Entity not present
         }
@@ -235,9 +238,9 @@ public class SparseSet {
      *
      * @return the dense list containing active entity IDs
      */
-    IntList dense() {
+    public IntList dense() {
         return dense;
-    } // for testing
+    } 
 
 
     // ============================ Overrides ================================ //
@@ -255,15 +258,17 @@ public class SparseSet {
         if (this == obj) {
             return true;
         }
+        
         if (!(obj instanceof SparseSet)) {
             return false;
         }
+        
         SparseSet other = (SparseSet) obj;
         return this.cap == other.cap
                 && Arrays.equals(this.sparse, other.sparse)
                 && this.dense.equals(other.dense);
-    }
-
+        }
+        
     /**
      * Returns the hash code value for this SparseSet.
      *

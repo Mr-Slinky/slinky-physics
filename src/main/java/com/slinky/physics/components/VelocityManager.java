@@ -1,5 +1,6 @@
 package com.slinky.physics.components;
 
+import com.slinky.physics.base.EntityManager;
 import com.slinky.physics.util.VectorStorage;
 
 /**
@@ -28,7 +29,7 @@ import com.slinky.physics.util.VectorStorage;
  * </p>
  * 
  * @version 1.0
- * @since   1.0.0
+ * @since   0.1.0
  * 
  * @author  Kheagen Haskins
  *
@@ -42,14 +43,16 @@ public final class VelocityManager extends VectorStorage {
      * for entities and a defined maximum capacity. These parameters are passed
      * directly to the internal {@link VectorStorage} instance.
      *
-     * @param initialEntityCapacity the initial number of entities the storage can hold
+     * @param entityManager the EntityManager managing this components entitites
+     * @param initialEntityCapacity the initial number of entities the storage
+     *        can hold
      * @param maxEntityCapacity the maximum number of entities this storage can manage
      * @throws IllegalArgumentException if {@code initialEntityCapacity} is less
      *         than or equal to 0, or if {@code initialEntityCapacity} exceeds
      *         {@code maxEntityCapacity}
      */
-    public VelocityManager(int initialEntityCapacity, int maxEntityCapacity) {
-        super(initialEntityCapacity, maxEntityCapacity);
+    public VelocityManager(EntityManager entityManager, int initialEntityCapacity, int maxEntityCapacity) {
+        super(Component.VELOCITY, entityManager, initialEntityCapacity, maxEntityCapacity);
     }
 
 }

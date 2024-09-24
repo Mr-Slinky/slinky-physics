@@ -36,9 +36,9 @@ class EntityManagerTest {
     }
 
     @Test
-    void testAddComponent() {
+    void testAddComponentTo() {
         int entityID  = entityManager.createEntity();
-        boolean added = entityManager.addComponent(entityID, Component.POSITION);
+        boolean added = entityManager.addComponentTo(entityID, Component.POSITION);
         assertAll(
             () -> assertTrue(added, "Component should be added successfully"),
             () -> assertTrue(entityManager.hasComponent(entityID, Component.POSITION), "Entity should have the POSITION component")
@@ -48,7 +48,7 @@ class EntityManagerTest {
     @Test
     void testRemoveComponent() {
         int entityID = entityManager.createEntity();
-        entityManager.addComponent(entityID, Component.POSITION);
+        entityManager.addComponentTo(entityID, Component.POSITION);
         boolean removed = entityManager.removeComponent(entityID, Component.POSITION);
         assertAll(
             () -> assertTrue(removed, "Component should be removed successfully"),
@@ -75,7 +75,7 @@ class EntityManagerTest {
     void testAddMultipleComponents(int componentBit) {
         int entityID = entityManager.createEntity();
         Component component = getComponentByBit(componentBit);
-        boolean added = entityManager.addComponent(entityID, component);
+        boolean added = entityManager.addComponentTo(entityID, component);
 
         assertAll(
             () -> assertTrue(added, "Component " + component + " should be added successfully"),
@@ -86,9 +86,9 @@ class EntityManagerTest {
     @Test
     void testAddAndRemoveMultipleComponents() {
         int entityID = entityManager.createEntity();
-        entityManager.addComponent(entityID, Component.POSITION);
-        entityManager.addComponent(entityID, Component.VELOCITY);
-        entityManager.addComponent(entityID, Component.MASS);
+        entityManager.addComponentTo(entityID, Component.POSITION);
+        entityManager.addComponentTo(entityID, Component.VELOCITY);
+        entityManager.addComponentTo(entityID, Component.MASS);
 
         boolean removed = entityManager.removeComponent(entityID, Component.VELOCITY);
 
@@ -131,7 +131,7 @@ class EntityManagerTest {
     void testAddComponentToNonExistentEntity() {
         int invalidEntityID = ENTITY_CAPACITY + 1;
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            entityManager.addComponent(invalidEntityID, Component.POSITION);
+            entityManager.addComponentTo(invalidEntityID, Component.POSITION);
         });
         String expectedMessage = "Entity ID " + invalidEntityID + " does not exist";
         assertTrue(exception.getMessage().contains(expectedMessage), "Exception message should indicate invalid entity ID");
@@ -167,8 +167,8 @@ class EntityManagerTest {
     @Test
     void testGetComponentMaskAfterAddingComponents() {
         int entityID = entityManager.createEntity();
-        entityManager.addComponent(entityID, Component.POSITION);
-        entityManager.addComponent(entityID, Component.VELOCITY);
+        entityManager.addComponentTo(entityID, Component.POSITION);
+        entityManager.addComponentTo(entityID, Component.VELOCITY);
         int expectedMask = Component.POSITION.bit() | Component.VELOCITY.bit();
         int actualMask = entityManager.getComponentMask(entityID);
         assertEquals(expectedMask, actualMask, "Component mask should reflect added components");
@@ -177,8 +177,8 @@ class EntityManagerTest {
     @Test
     void testGetComponentMaskAfterRemovingComponents() {
         int entityID = entityManager.createEntity();
-        entityManager.addComponent(entityID, Component.POSITION);
-        entityManager.addComponent(entityID, Component.VELOCITY);
+        entityManager.addComponentTo(entityID, Component.POSITION);
+        entityManager.addComponentTo(entityID, Component.VELOCITY);
         entityManager.removeComponent(entityID, Component.POSITION);
         int expectedMask = Component.VELOCITY.bit();
         int actualMask = entityManager.getComponentMask(entityID);
@@ -198,7 +198,7 @@ class EntityManagerTest {
     @Test
     void testGetComponentMaskAfterEntityDestruction() {
         int entityID = entityManager.createEntity();
-        entityManager.addComponent(entityID, Component.POSITION);
+        entityManager.addComponentTo(entityID, Component.POSITION);
         entityManager.destroyEntity(entityID);
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             entityManager.getComponentMask(entityID);

@@ -1,5 +1,7 @@
 package com.slinky.physics.util;
 
+import com.slinky.physics.base.EntityManager;
+import com.slinky.physics.components.Component;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -8,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * Unit tests for the {@link ScalarStorage} class.
@@ -26,7 +29,19 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author
  */
 public class ScalarStorageTest {
-
+    
+    private Component testComponent = Component.POSITION;
+    private EntityManager entityManager;
+    
+    @BeforeEach
+    void setup() {
+        int size = 10_000;
+        entityManager = new EntityManager(size);
+        for (int i = 0; i < size; i++) {
+            entityManager.createEntity();
+        }
+    }
+    
     // ==========================[ Constructor Tests ]=========================== \\
     @Nested
     @DisplayName("Constructor Tests")
@@ -41,7 +56,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should create ScalarStorage with valid capacities")
         void testConstructorWithValidCapacities(int initialCapacity, int maxCapacity) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             assertAll("Validating ScalarStorage initialization",
                 () -> assertEquals(maxCapacity, storage.getMaxEntityCapacity(), "Max capacity not set correctly"),
@@ -59,7 +74,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException for non-positive initial capacities")
         void testConstructorWithNonPositiveInitialCapacity(int initialCapacity, int maxCapacity) {
-            Executable constructor = () -> new ScalarStorage(initialCapacity, maxCapacity);
+            Executable constructor = () -> new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, constructor);
 
             assertEquals("Initial capacity must be positive", exception.getMessage());
@@ -73,7 +88,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException when initial capacity exceeds max capacity")
         void testConstructorWithInitialCapacityExceedingMaxCapacity(int initialCapacity, int maxCapacity) {
-            Executable constructor = () -> new ScalarStorage(initialCapacity, maxCapacity);
+            Executable constructor = () -> new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, constructor);
 
             assertEquals("Initial capacity cannot exceed maximum capacity", exception.getMessage());
@@ -84,7 +99,7 @@ public class ScalarStorageTest {
         void testConstructorInitializesInternalStructures() {
             int initialCapacity = 16;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             assertAll("Validating internal structures",
                 () -> assertEquals(maxCapacity, storage.getMaxEntityCapacity(), "Max capacity mismatch"),
@@ -110,7 +125,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should correctly return getter values after initialization")
         void testGettersAfterInitialization(int initialCapacity, int maxCapacity) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             assertAll("Validating getters after initialization",
                     () -> assertEquals(0, storage.size(), "Size should be zero after initialization"),
@@ -128,7 +143,7 @@ public class ScalarStorageTest {
         void testGettersAfterAddingEntities() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add entities
             for (int entityId = 0; entityId < 10; entityId++) {
@@ -158,7 +173,7 @@ public class ScalarStorageTest {
         void testGettersAfterRemovingEntities() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add entities
             for (int entityId = 0; entityId < 10; entityId++) {
@@ -205,7 +220,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should add valid entities correctly")
         void testAddValidEntities(int initialCapacity, int maxCapacity, int entityId, float value) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             storage.add(entityId, value);
 
@@ -227,7 +242,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should throw IllegalStateException when adding beyond max capacity")
         void testAddBeyondMaxCapacity(int initialCapacity, int maxCapacity) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add entities up to max capacity
             for (int entityId = 0; entityId < maxCapacity; entityId++) {
@@ -251,7 +266,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException when adding duplicate entity IDs")
         void testAddDuplicateEntities(int initialCapacity, int maxCapacity, int entityId) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add the entity for the first time
             storage.add(entityId, entityId * 1.0f);
@@ -272,7 +287,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException when adding invalid entity IDs")
         void testAddInvalidEntityIds(int initialCapacity, int maxCapacity, int entityId, float value) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             Executable addInvalid = () -> storage.add(entityId, value);
 
@@ -286,7 +301,7 @@ public class ScalarStorageTest {
         void testAddMultipleValidEntities() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add multiple entities
             for (int entityId = 0; entityId < 20; entityId++) {
@@ -312,7 +327,7 @@ public class ScalarStorageTest {
         void testAddEntitiesUpToMaxCapacity() {
             int initialCapacity = 16;
             int maxCapacity     = 50;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add entities up to max capacity
             for (int entityId = 0; entityId < maxCapacity; entityId++) {
@@ -348,7 +363,7 @@ public class ScalarStorageTest {
         void testRemoveExistingEntity() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add an entity
             int entityId = 10;
@@ -377,7 +392,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should remove multiple existing entities correctly")
         void testRemoveMultipleExistingEntities(int initialCapacity, int maxCapacity, int entityId1, int entityId2) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add multiple entities
             for (int i = 0; i < 10; i++) {
@@ -420,7 +435,7 @@ public class ScalarStorageTest {
         void testRemoveNonExistingEntity() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Attempt to remove an entity that doesn't exist
             int nonExistingEntityId = 50;
@@ -440,7 +455,7 @@ public class ScalarStorageTest {
         void testRemoveLastEntity() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add multiple entities
             for (int i = 0; i < 5; i++) {
@@ -474,7 +489,7 @@ public class ScalarStorageTest {
         void testRemoveAllEntities() {
             int initialCapacity = 64;
             int maxCapacity = 1000;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add multiple entities
             for (int i = 0; i < 20; i++) {
@@ -505,7 +520,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should correctly handle swap and pop when removing entities from various positions")
         void testRemoveEntitiesWithSwapAndPop(int initialCapacity, int maxCapacity, int removeEntityId) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add multiple entities
             for (int i = 0; i < 10; i++) {
@@ -553,7 +568,7 @@ public class ScalarStorageTest {
         void testRemoveFromEmptyStorage() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Attempt to remove an entity from an empty storage
             int entityId = 10;
@@ -582,7 +597,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should correctly determine if storage contains specific entities")
         void testContains(int initialCapacity, int maxCapacity, int entityId, boolean expectedContains) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             if (expectedContains) {
                 storage.add(entityId, entityId * 1.0f);
@@ -610,7 +625,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should retrieve correct scalar values for existing entities")
         void testGetExistingEntity(int initialCapacity, int maxCapacity, int entityId, float value) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             storage.add(entityId, value);
 
             float retrievedValue = storage.get(entityId);
@@ -629,7 +644,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException when getting a non-existing entity")
         void testGetNonExistingEntity(int initialCapacity, int maxCapacity, int entityId) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             Executable getNonExisting = () -> storage.get(entityId);
 
@@ -645,7 +660,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should correctly set scalar values for existing entities")
         void testSetExistingEntity(int initialCapacity, int maxCapacity, int entityId, float newValue) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             storage.add(entityId, newValue - 10.0f); // Add with initial value
 
             storage.set(entityId, newValue);
@@ -664,7 +679,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException when setting a non-existing entity")
         void testSetNonExistingEntity(int initialCapacity, int maxCapacity, int entityId, float newValue) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             Executable setNonExisting = () -> storage.set(entityId, newValue);
 
@@ -676,7 +691,7 @@ public class ScalarStorageTest {
         void testSetMultipleEntities() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add multiple entities
             for (int i = 0; i < 10; i++) {
@@ -705,7 +720,7 @@ public class ScalarStorageTest {
         void testSetEntitiesAfterRemoval() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add multiple entities
             for (int i = 0; i < 10; i++) {
@@ -750,7 +765,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should retrieve correct scalar values for existing entities using getValueOf(entityId)")
         void testGetValueOfExistingEntity(int initialCapacity, int maxCapacity, int entityId, float value) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             storage.add(entityId, value);
 
             float retrievedValue = storage.getValueOf(entityId);
@@ -773,7 +788,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException when retrieving value for non-existing entity using getValueOf(entityId)")
         void testGetValueOfNonExistingEntity(int initialCapacity, int maxCapacity, int entityId) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             Executable getNonExisting = () -> storage.getValueOf(entityId);
 
@@ -792,7 +807,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should retrieve correct scalar values for existing entities using getValueOf(entityId, dest)")
         void testGetValueOfWithDestArray(int initialCapacity, int maxCapacity, int entityId, float value) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             storage.add(entityId, value);
 
             float[] dest = new float[1];
@@ -816,7 +831,7 @@ public class ScalarStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException when retrieving value for non-existing entity using getValueOf(entityId, dest)")
         void testGetValueOfWithDestArrayNonExistingEntity(int initialCapacity, int maxCapacity, int entityId) {
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             float[] dest = new float[1];
 
             Executable getNonExisting = () -> storage.getValueOf(entityId, dest);
@@ -836,7 +851,7 @@ public class ScalarStorageTest {
             int entityId = 10;
             float value = 10.5f;
 
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             storage.add(entityId, value);
 
             Executable getWithNullDest = () -> storage.getValueOf(entityId, null);
@@ -856,7 +871,7 @@ public class ScalarStorageTest {
             int entityId = 10;
             float value = 10.5f;
 
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             storage.add(entityId, value);
 
             float[] dest = new float[0]; // Insufficient length
@@ -875,7 +890,7 @@ public class ScalarStorageTest {
         void testGetValueOfMultipleEntities() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add multiple entities
             for (int i = 0; i < 10; i++) {
@@ -905,7 +920,7 @@ public class ScalarStorageTest {
         void testGetValueOfAfterRemoval() {
             int initialCapacity = 32;
             int maxCapacity = 100;
-            ScalarStorage storage = new ScalarStorage(initialCapacity, maxCapacity);
+            ScalarStorage storage = new ScalarStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             // Add multiple entities
             for (int i = 0; i < 5; i++) {

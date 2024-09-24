@@ -1,4 +1,4 @@
-package com.slinky.physics.util;
+package com.slinky.physics.components.data;
 
 import static java.lang.Math.abs;
 import java.util.stream.Stream;

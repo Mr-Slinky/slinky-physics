@@ -1,9 +1,13 @@
 package com.slinky.physics.util;
 
+import com.slinky.physics.base.EntityManager;
+import com.slinky.physics.components.Component;
 import java.util.Arrays;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -15,9 +19,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for {@link VectorStorage}.
+ * 
+ * @author Kheagen Haskins
  */
 public class VectorStorageTest {
-
+    
+    private Component testComponent = Component.POSITION; // arbitrary getComponent
+    private EntityManager entityManager;
+    
+    @BeforeEach
+    void setup() {
+        int size = 10_000;
+        entityManager = new EntityManager(size);
+        for (int i = 0; i < size; i++) {
+            entityManager.createEntity();
+        }
+    }
+    
     // ==========================[ Constructor Tests ]=========================== \\
     @Nested
     @DisplayName("Constructor Tests")
@@ -32,7 +50,7 @@ public class VectorStorageTest {
         })
         @DisplayName("Should create VectorStorage with valid capacities")
         void testConstructorWithValidCapacities(int initialCapacity, int maxCapacity) {
-            VectorStorage storage = new VectorStorage(initialCapacity, maxCapacity);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             assertAll("Validating VectorStorage initialization",
                 () -> assertEquals(maxCapacity, storage.getMaxEntityCapacity(), "Max capacity not set correctly"),
@@ -50,7 +68,7 @@ public class VectorStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException for non-positive initial capacities")
         void testConstructorWithNonPositiveInitialCapacity(int initialCapacity, int maxCapacity) {
-            Executable constructor = () -> new VectorStorage(initialCapacity, maxCapacity);
+            Executable constructor = () -> new VectorStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, constructor);
 
             assertEquals("Initial capacity must be positive", exception.getMessage());
@@ -64,7 +82,7 @@ public class VectorStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException when initial capacity exceeds max capacity")
         void testConstructorWithInitialCapacityExceedingMaxCapacity(int initialCapacity, int maxCapacity) {
-            Executable constructor = () -> new VectorStorage(initialCapacity, maxCapacity);
+            Executable constructor = () -> new VectorStorage(testComponent, entityManager, initialCapacity, maxCapacity);
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, constructor);
 
             assertEquals("Initial capacity cannot exceed maximum capacity", exception.getMessage());
@@ -75,7 +93,7 @@ public class VectorStorageTest {
         void testConstructorInitializesInternalStructures() {
             int initialCapacity = 10;
             int maxCapacity = 100;
-            VectorStorage storage = new VectorStorage(initialCapacity, maxCapacity);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             assertAll("Validating internal structures",
                 () -> assertEquals(maxCapacity, storage.getMaxEntityCapacity(), "Max capacity mismatch"),
@@ -99,7 +117,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should return correct size when storage is empty")
         void testSizeWhenEmpty() {
-            VectorStorage storage = new VectorStorage(10, 100);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 10, 100);
 
             assertEquals(0, storage.size(), "Size should be zero when storage is empty");
         }
@@ -107,7 +125,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should return correct size after adding entities")
         void testSizeAfterAddingEntities() {
-            VectorStorage storage = new VectorStorage(10, 100);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 10, 100);
             storage.add(1, 10.0f, 15.0f);
             storage.add(2, 20.0f, 25.0f);
 
@@ -119,7 +137,7 @@ public class VectorStorageTest {
         void testGetMaxEntityCapacity() {
             int initialCapacity = 10;
             int maxCapacity = 50;
-            VectorStorage storage = new VectorStorage(initialCapacity, maxCapacity);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, initialCapacity, maxCapacity);
 
             assertEquals(maxCapacity, storage.getMaxEntityCapacity(), "Max capacity should match the value set in constructor");
         }
@@ -127,7 +145,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should return non-null vector data")
         void testGetVectorData() {
-            VectorStorage storage = new VectorStorage(10, 100);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 10, 100);
 
             assertNotNull(storage.getVectorData(), "getVectorData() should not return null");
             assertEquals(0, storage.getVectorData().size(), "Vector data size should be zero when storage is empty");
@@ -136,7 +154,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should return vector data with correct values after adding entities")
         void testGetVectorDataAfterAddingEntities() {
-            VectorStorage storage = new VectorStorage(5, 50);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 50);
             storage.add(1, 10.0f, 15.0f);
             storage.add(2, 20.0f, 25.0f);
 
@@ -154,7 +172,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should return empty entity IDs list when storage is empty")
         void testGetEntityIdsWhenEmpty() {
-            VectorStorage storage = new VectorStorage(10, 100);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 10, 100);
 
             IntList entityIds = storage.getEntityIds();
 
@@ -165,7 +183,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should return correct entity IDs after adding entities")
         void testGetEntityIdsAfterAddingEntities() {
-            VectorStorage storage = new VectorStorage(5, 50);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 50);
             storage.add(1, 10.0f, 15.0f);
             storage.add(3, 20.0f, 25.0f);
             storage.add(5, 30.0f, 35.0f);
@@ -184,7 +202,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should maintain correct state after removing entities")
         void testGettersAfterRemovingEntities() {
-            VectorStorage storage = new VectorStorage(5, 50);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 50);
             storage.add(1, 10.0f, 15.0f);
             storage.add(2, 20.0f, 25.0f);
             storage.add(3, 30.0f, 35.0f);
@@ -210,10 +228,10 @@ public class VectorStorageTest {
     class AddMethodTests {
 
         @ParameterizedTest
-        @ValueSource(ints = {0, 1, 100, 1000, 100000})
+        @ValueSource(ints = {0, 1, 100, 1000, 9_999})
         @DisplayName("Should add entity successfully when capacity allows")
         void testAddEntitySuccessfully(int entityId) {
-            VectorStorage storage = new VectorStorage(5, entityId + 100);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, entityId + 100);
             storage.add(entityId, 10.0f, 15.0f);
 
             assertAll("Validating successful addition of entity",
@@ -227,7 +245,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should throw IllegalStateException when adding entity beyond max capacity")
         void testAddEntityBeyondMaxCapacity() {
-            VectorStorage storage = new VectorStorage(2, 2);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 2, 2);
             storage.add(0, 10.0f, 15.0f);
             storage.add(1, 20.0f, 25.0f);
 
@@ -245,7 +263,7 @@ public class VectorStorageTest {
         })
         @DisplayName("Should throw IllegalArgumentException for invalid entity IDs")
         void testAddEntityWithInvalidEntityId(int entityId) {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
 
             Executable addOperation = () -> storage.add(entityId, 10.0f, 15.0f);
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, addOperation);
@@ -256,7 +274,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should throw IllegalArgumentException when adding duplicate entity")
         void testAddDuplicateEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(1, 10.0f, 15.0f);
 
             Executable addOperation = () -> storage.add(1, 20.0f, 25.0f);
@@ -268,7 +286,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should store multiple entities correctly")
         void testAddMultipleEntities() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(1, 10.0f, 15.0f);
             storage.add(2, 20.0f, 25.0f);
             storage.add(3, 30.0f, 35.0f);
@@ -287,7 +305,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should dynamically resize vectorData when capacity exceeded")
         void testDynamicResizingOfVectorData() {
-            VectorStorage storage = new VectorStorage(2, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 2, 10);
             storage.add(1, 10.0f, 15.0f);
             storage.add(2, 20.0f, 25.0f);
             storage.add(3, 30.0f, 35.0f); // This should trigger a resize
@@ -313,7 +331,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should remove existing entity successfully")
         void testRemoveExistingEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
             storage.add(1, 20.0f, 25.0f);
 
@@ -331,7 +349,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should throw IllegalArgumentException when removing non-existent entity")
         void testRemoveNonExistentEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
 
             Executable removeOperation = () -> storage.remove(1);
@@ -343,7 +361,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should remove multiple entities and maintain correct state")
         void testRemoveMultipleEntities() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
             storage.add(1, 20.0f, 25.0f);
             storage.add(2, 30.0f, 35.0f);
@@ -364,7 +382,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should handle removing the last entity correctly")
         void testRemoveLastEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
 
             storage.remove(0);
@@ -379,7 +397,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should handle swap and pop correctly when removing entities")
         void testSwapAndPopOnRemove() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
             storage.add(1, 20.0f, 25.0f);
             storage.add(2, 30.0f, 35.0f);
@@ -401,7 +419,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should handle removing all entities and reset storage")
         void testRemoveAllEntities() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
             storage.add(1, 20.0f, 25.0f);
 
@@ -426,7 +444,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should return true for existing entities in contains method")
         void testContainsExistingEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
             storage.add(1, 20.0f, 25.0f);
 
@@ -439,7 +457,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should return false for non-existing entities in contains method")
         void testContainsNonExistingEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
 
             assertAll("Validating contains method for non-existing entities",
@@ -451,7 +469,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should retrieve correct x and y components with getX and getY")
         void testGetXAndGetY() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
             storage.add(1, 20.0f, 25.0f);
 
@@ -466,7 +484,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("getX and getY should throw IllegalArgumentException for non-existing entities")
         void testGetXAndGetYWithNonExistingEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
 
             Executable getXOperation = () -> storage.getX(1);
@@ -481,7 +499,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should update x and y components with setX and setY")
         void testSetXAndSetY() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
 
             storage.setX(0, 50.0f);
@@ -496,7 +514,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("setX and setY should throw IllegalArgumentException for non-existing entities")
         void testSetXAndSetYWithNonExistingEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
 
             Executable setXOperation = () -> storage.setX(1, 50.0f);
@@ -516,7 +534,7 @@ public class VectorStorageTest {
         })
         @DisplayName("Should correctly add and retrieve multiple entities")
         void testAddAndRetrieveMultipleEntities(int entityId, float x, float y) {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(entityId, x, y);
 
             assertAll("Validating addition and retrieval of multiple entities",
@@ -529,7 +547,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should correctly update and retrieve x and y components for multiple entities")
         void testSetXAndSetYForMultipleEntities() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
             storage.add(1, 20.0f, 25.0f);
 
@@ -554,7 +572,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should retrieve vector into provided array with getVectorOf(entityId, dest)")
         void testGetVectorOfWithDestArray() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
 
             float[] dest = new float[2];
@@ -569,7 +587,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("getVectorOf(entityId, dest) should throw exception for non-existing entity")
         void testGetVectorOfWithDestArrayNonExistingEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
 
             float[] dest = new float[2];
             Executable operation = () -> storage.getVectorOf(0, dest);
@@ -581,7 +599,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("getVectorOf(entityId, dest) should throw exception for insufficient dest array size")
         void testGetVectorOfWithInsufficientDestArray() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
 
             float[] dest = new float[1]; // Insufficient size
@@ -594,7 +612,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should retrieve vector as new array with getVectorOf(entityId)")
         void testGetVectorOfReturnsArray() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 20.0f, 25.0f);
 
             float[] vector = storage.getVectorOf(0);
@@ -610,7 +628,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("getVectorOf(entityId) should throw exception for non-existing entity")
         void testGetVectorOfReturnsArrayNonExistingEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
 
             Executable operation = () -> storage.getVectorOf(0);
 
@@ -621,7 +639,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should set vector components with setVectorOf(entityId, x, y)")
         void testSetVectorOf() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
 
             storage.setVectorOf(0, 50.0f, 55.0f);
@@ -635,7 +653,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("setVectorOf(entityId, x, y) should throw exception for non-existing entity")
         void testSetVectorOfNonExistingEntity() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
 
             Executable operation = () -> storage.setVectorOf(0, 50.0f, 55.0f);
 
@@ -646,7 +664,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should handle multiple entities with getVectorOf and setVectorOf")
         void testGetSetVectorOfMultipleEntities() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 10.0f, 15.0f);
             storage.add(1, 20.0f, 25.0f);
 
@@ -670,7 +688,7 @@ public class VectorStorageTest {
         })
         @DisplayName("Should correctly get and set vectors for multiple entities")
         void testGetSetVectorOfParameterized(int entityId, float x, float y) {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(entityId, x, y);
 
             storage.setVectorOf(entityId, x + 10.0f, y + 10.0f);
@@ -691,7 +709,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should correctly handle multiple add and remove operations")
         void testMultipleAddAndRemoveOperations() {
-            VectorStorage storage = new VectorStorage(5, 20);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 20);
 
             // Add entities 0 to 9
             for (int i = 0; i < 10; i++) {
@@ -747,7 +765,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should correctly resize internal arrays when capacity exceeded")
         void testInternalArrayResizing() {
-            VectorStorage storage = new VectorStorage(2, 100);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 2, 100);
 
             int initialCapacity = storage.getVectorData().capacity();
 
@@ -767,7 +785,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should maintain data consistency after swap and pop operations")
         void testDataConsistencyAfterSwapAndPop() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
             storage.add(0, 0.0f, 0.0f);
             storage.add(1, 1.0f, 1.0f);
             storage.add(2, 2.0f, 2.0f);
@@ -806,7 +824,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should handle stress test of adding and removing entities")
         void testStressAddRemove() {
-            VectorStorage storage = new VectorStorage(10, 1000);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 10, 1000);
 
             // Add 500 entities
             for (int i = 0; i < 500; i++) {
@@ -845,7 +863,7 @@ public class VectorStorageTest {
         @Test
         @DisplayName("Should not have residual data after removing all entities")
         void testResidualDataAfterClearing() {
-            VectorStorage storage = new VectorStorage(5, 10);
+            VectorStorage storage = new VectorStorage(testComponent, entityManager, 5, 10);
 
             // Add entities
             for (int i = 0; i < 5; i++) {

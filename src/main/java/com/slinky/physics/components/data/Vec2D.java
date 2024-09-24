@@ -1,4 +1,4 @@
-package com.slinky.physics.util;
+package com.slinky.physics.components.data;
 
 import java.util.Objects;
 

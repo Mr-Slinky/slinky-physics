@@ -58,10 +58,14 @@ public final class FloatList {
 
     // ============================== Static ================================ //
     /**
-     * The default initial capacity of the list, used when no capacity is
-     * specified by the user. This constant defines the smallest allowed size 
-     * for the internal array buffer to avoid unnecessary memory allocation 
-     * in cases where the list is expected to remain small.
+     * The default initial capacity of the list, used when no specific capacity
+     * is provided by the user. This constant defines the minimum size for the
+     * internal array buffer to prevent unnecessary memory reallocations when
+     * the list is expected to remain small. The value is chosen to align with
+     * typical cache line sizes for performance optimisation. Given that each
+     * `int` occupies 4 bytes and most cache lines are 64 bytes, a capacity of
+     * 16 ensures that a full cache line can be utilised efficiently (64 bytes /
+     * 4 bytes per `int` = 16 `int` values).
      */
     public static final int MIN_CAPACITY = 16;
 

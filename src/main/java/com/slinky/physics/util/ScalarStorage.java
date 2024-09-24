@@ -1,6 +1,8 @@
 package com.slinky.physics.util;
 
-import java.util.Arrays;
+import com.slinky.physics.base.EntityManager;
+import com.slinky.physics.components.Component;
+import com.slinky.physics.components.ComponentManager;
 
 /**
  * A high-performance data structure designed to store and manage scalar
@@ -11,42 +13,35 @@ import java.util.Arrays;
  *
  * <p>
  * The {@code ScalarStorage} class organises scalar data in a flat format, where
- * each entity's value is stored consecutively in a
- * {@link com.slinky.physics.util.FloatList}. This layout enhances cache
- * locality, allowing for faster access times and reduced memory overhead,
- * especially when large numbers of entities are being processed. Each scalar
- * value is associated with an entity ID, which is efficiently managed using a
- * {@link com.slinky.physics.util.SparseSet}.
+ * each entity's value is stored consecutively in a {@link FloatList}. This layout
+ * enhances cache locality, allowing for faster access times and reduced memory
+ * overhead, especially when large numbers of entities are being processed. Each
+ * scalar value is associated with an entity ID, which is efficiently managed
+ * using a {@link SparseSet}.
  * </p>
  *
  * <p>
- * This class is <b>sealed</b>, allowing only specific subclasses—namely
- * {@code MassManager}—to extend it. This ensures the correct usage of the
- * class in context and prevents unintended inheritance outside of these
- * permitted components.
- * </p>
- *
- * <p>
- * Additionally, all methods in this class are declared as <b>final</b>,
- * allowing the JVM to aggressively optimise them. This finality guarantees that
- * methods will not be overridden, which facilitates faster execution by
- * enabling method inlining and other optimisations that improve runtime
- * performance.
+ * This class is <b>final</b>, preventing further inheritance and ensuring
+ * that its behavior remains consistent. All methods in this class are declared
+ * as <b>final</b>, allowing the JVM to aggressively optimise them. This
+ * finality guarantees that methods will not be overridden, facilitating faster
+ * execution by enabling method inlining and other optimisations that improve
+ * runtime performance.
  * </p>
  *
  * <h2>Core Features</h2>
  * <ul>
- *   <li><b>Efficient ID management:</b> The {@code SparseSet} tracks entity IDs,
- *   allowing for fast addition, removal, and lookup of entities.</li>
- *   <li><b>Flat data layout:</b> Scalar values are stored in a contiguous
- *   {@link FloatList}, which improves memory access patterns and cache
- *   efficiency.</li>
- *   <li><b>Memory efficiency:</b> The class is designed to handle thousands of
- *   entities with minimal memory overhead and supports dynamic resizing of the
- *   underlying data arrays.</li>
- *   <li><b>Swap and pop removal:</b> When a scalar is removed, the last value in
- *   the list is swapped into its position, ensuring that data access remains
- *   contiguous and efficient without leaving gaps in memory.</li>
+ *   <li><b>Efficient ID Management:</b> The {@code SparseSet} tracks entity IDs,
+ *       allowing for fast addition, removal, and lookup of entities.</li>
+ *   <li><b>Flat Data Layout:</b> Scalar values are stored in a contiguous
+ *       {@link FloatList}, which improves memory access patterns and cache
+ *       efficiency.</li>
+ *   <li><b>Memory Efficiency:</b> Designed to handle thousands of
+ *       entities with minimal memory overhead and supports dynamic resizing of
+ *       the underlying data arrays.</li>
+ *   <li><b>Swap and Pop Removal:</b> When a scalar is removed, the last value in
+ *       the list is swapped into its position, ensuring that data access remains
+ *       contiguous and efficient without leaving gaps in memory.</li>
  * </ul>
  *
  * <h2>Usage</h2>
@@ -56,9 +51,9 @@ import java.util.Arrays;
  * retrieving values, updating scalars, and removing entities.
  * </p>
  *
- * <pre><code>
+ * <pre>{@code
  *     // Create a ScalarStorage instance with an initial capacity of 100 entities
- *     ScalarStorage storage = new ScalarStorage(100, 1000);
+ *     ScalarStorage storage = new ScalarStorage(Component.MASS, entityManager, 100, 1000);
  *
  *     // Add a scalar for entity 1
  *     storage.add(1, 10.0f);
@@ -71,29 +66,34 @@ import java.util.Arrays;
  *
  *     // Remove the scalar associated with entity 1
  *     storage.remove(1);
- * </code></pre>
+ * }</pre>
  *
- * <h2>Resizing Behaviour</h2>
+ * <h2>Resizing Behavior</h2>
  * <p>
- * The internal {@link com.slinky.physics.util.FloatList} resizes dynamically
- * based on the number of stored scalars. When new scalars are added and the
- * list reaches its capacity, it grows by 1.5x to accommodate more data.
- * Similarly, the {@link com.slinky.physics.util.SparseSet} ensures that entity
- * IDs are managed efficiently, even as entities are added and removed.
+ * The internal {@link FloatList} resizes dynamically based on the number of
+ * stored scalars. When new scalars are added and the list reaches its capacity,
+ * it grows by 1.5x to accommodate more data. Similarly, the {@link SparseSet}
+ * ensures that entity IDs are managed efficiently, even as entities are added
+ * and removed.
  * </p>
  *
- * @version 1.0
+ * @version 2.0
  * @since   0.1.0
  *
- * @see     com.slinky.physics.util.FloatList
- * @see     com.slinky.physics.util.IntList
- * @see     com.slinky.physics.util.SparseSet
+ * @see     FloatList
+ * @see     IntList
+ * @see     SparseSet
+ * @see     Component
+ * @see     ComponentManager
+ * @see     EntityManager
  *
- * @author  Kheagen Haskins
+ * @author  
+ * Kheagen Haskins
  */
-public class ScalarStorage  {
+public class ScalarStorage implements ComponentManager<Float> {
 
     // ============================== Fields ================================ //
+
     /**
      * The {@link SparseSet} responsible for managing entity IDs in an efficient
      * manner. This structure provides quick access to entities while ensuring
@@ -133,13 +133,24 @@ public class ScalarStorage  {
      */
     private final int maxCap;
 
-    // =========================== Constructors ============================= //
     /**
-     * Constructs a {@code ScalarStorage} with the specified initial capacity
-     * for entities and a defined maximum capacity. The initial capacity
-     * determines the starting size of the internal data structures, while the
-     * maximum capacity defines the upper limit of how many entities can be
-     * stored.
+     * The specific {@link Component} type that this manager is responsible for.
+     * Each component type is uniquely identified by its associated bitmask.
+     */
+    private final Component componentType;
+
+    /**
+     * The {@code EntityManager} instance that this manager interacts with. The
+     * {@code EntityManager} oversees the lifecycle of entities and their
+     * associations with various components.
+     */
+    protected final EntityManager entityManager;
+
+    // =========================== Constructors ============================= //
+
+    /**
+     * Constructs a {@code ScalarStorage} with the specified component type,
+     * initial capacity for entities, and a defined maximum capacity.
      *
      * <p>
      * The {@code initialEntityCapacity} is used to initialise the size of the
@@ -148,15 +159,16 @@ public class ScalarStorage  {
      * will never exceed the {@code maxEntityCapacity}.
      * </p>
      *
-     * @param initialEntityCapacity the initial number of entities the storage
-     * can hold
-     * @param maxEntityCapacity the maximum number of entities this storage can
-     * manage
+     * @param componentType           the type of component managed by this storage, e.g., {@code Component.MASS}
+     * @param entityManager           the {@code EntityManager} managing this component's entities
+     * @param initialEntityCapacity   the initial number of entities the storage can hold
+     * @param maxEntityCapacity       the maximum number of entities this storage can manage
+     *
      * @throws IllegalArgumentException if {@code initialEntityCapacity} is less
-     * than or equal to 0, or if {@code initialEntityCapacity} exceeds
-     * {@code maxEntityCapacity}
+     *         than or equal to 0, or if {@code initialEntityCapacity} exceeds
+     *         {@code maxEntityCapacity}
      */
-    public ScalarStorage(int initialEntityCapacity, int maxEntityCapacity) {
+    public ScalarStorage(Component componentType, EntityManager entityManager, int initialEntityCapacity, int maxEntityCapacity) {
         if (initialEntityCapacity <= 0) {
             throw new IllegalArgumentException("Initial capacity must be positive");
         }
@@ -165,12 +177,15 @@ public class ScalarStorage  {
             throw new IllegalArgumentException("Initial capacity cannot exceed maximum capacity");
         }
 
-        this.maxCap     = maxEntityCapacity;
-        this.scalarData = new FloatList(initialEntityCapacity);
-        this.sparseSet  = new SparseSet(maxEntityCapacity);
+        this.componentType = componentType;
+        this.entityManager = entityManager;
+        this.maxCap        = maxEntityCapacity;
+        this.scalarData    = new FloatList(initialEntityCapacity);
+        this.sparseSet     = new SparseSet(maxEntityCapacity);
     }
 
     // ============================== Getters =============================== //
+
     /**
      * Returns the current number of entities stored in this
      * {@code ScalarStorage}.
@@ -237,7 +252,18 @@ public class ScalarStorage  {
         return sparseSet.dense();
     }
 
+    /**
+     * Returns the specific {@link Component} type that this manager is responsible for.
+     *
+     * @return the component type managed by this storage
+     */
+    @Override
+    public Component getComponent() {
+        return componentType;
+    }
+
     // ============================ API Methods ============================= //
+
     /**
      * Adds a new scalar value for the specified entity.
      *
@@ -256,12 +282,14 @@ public class ScalarStorage  {
      * </p>
      *
      * @param entityId the ID of the entity to be added
-     * @param value the scalar value to associate with the entity
+     * @param value    the scalar value to associate with the entity
+     *
      * @throws IllegalArgumentException if the {@code entityId} is out of bounds
-     * or already exists
-     * @throws IllegalStateException if the storage has reached maximum capacity
+     *         or already exists
+     * @throws IllegalStateException    if the storage has reached maximum capacity
      */
-    public final synchronized void add(int entityId, float value) {
+    @Override
+    public final synchronized void add(int entityId, Float value) {
         if (size() >= maxCap) {
             throw new IllegalStateException("Maximum capacity reached: " + maxCap);
         }
@@ -275,6 +303,55 @@ public class ScalarStorage  {
         }
 
         scalarData.add(value);
+    }
+
+    /**
+     * Adds a new scalar value for the specified entity using a variable-length argument list.
+     *
+     * <p>
+     * This method provides flexibility by allowing the addition of scalar data
+     * without explicitly creating a {@code Float} object. It internally casts
+     * the first element of the {@code values} array to a {@code float} and adds it
+     * as the scalar value for the entity.
+     * </p>
+     *
+     * @param entityId the ID of the entity to be added
+     * @param values   a variable-length argument list containing the scalar value
+     *
+     * @throws IllegalArgumentException if the {@code entityId} is out of bounds,
+     *         already exists, or if {@code values} is null or empty
+     * @throws IllegalStateException    if the storage has reached maximum capacity
+     */
+    @Override
+    public final synchronized void add(int entityId, Object... values) {
+        if (values == null || values.length < 1) {
+            throw new IllegalArgumentException("ScalarStorage requires at least one value.");
+        }
+
+        if (!(values[0] instanceof Float)) {
+            throw new IllegalArgumentException("First value must be of type Float.");
+        }
+
+        add(entityId, (Float) values[0]);
+    }
+
+    /**
+     * Assigns the component with a default scalar value to the specified entity.
+     *
+     * <p>
+     * This method initialises the component for the given {@code entityId} using a
+     * default scalar value of {@code 0.0f}. This is useful when the specific scalar
+     * value is not immediately known or will be set later.
+     * </p>
+     *
+     * @param entityId the ID of the entity to which the component will be added with a default value
+     *
+     * @throws IllegalArgumentException if the {@code entityId} is out of bounds
+     *         or already exists
+     * @throws IllegalStateException    if the storage has reached maximum capacity
+     */
+    public final synchronized void add(int entityId) {
+        add(entityId, 0.0f);
     }
 
     /**
@@ -294,8 +371,10 @@ public class ScalarStorage  {
      * </p>
      *
      * @param entityId the ID of the entity whose scalar is to be removed
+     *
      * @throws IllegalArgumentException if the entity does not exist
      */
+    @Override
     public final synchronized void remove(int entityId) {
         if (!sparseSet.contains(entityId)) {
             throw new IllegalArgumentException("Entity does not exist: " + entityId);
@@ -306,7 +385,6 @@ public class ScalarStorage  {
 
         // Swap scalar data if not removing the last element
         if (indexToRemove != lastIndex) {
-            // Swap scalar data
             float lastValue = scalarData.get(lastIndex);
             scalarData.set(indexToRemove, lastValue);
         }
@@ -344,8 +422,9 @@ public class ScalarStorage  {
      * </p>
      *
      * @param entityId the ID of the entity whose scalar value is being
-     * retrieved
+     *                 retrieved
      * @return the scalar value for the specified entity
+     *
      * @throws IllegalArgumentException if the entity does not exist
      */
     public final synchronized float get(int entityId) {
@@ -362,7 +441,8 @@ public class ScalarStorage  {
      * </p>
      *
      * @param entityId the ID of the entity whose scalar value is being set
-     * @param value the new scalar value to assign to the entity
+     * @param value    the new scalar value to assign to the entity
+     *
      * @throws IllegalArgumentException if the entity does not exist
      */
     public final synchronized void set(int entityId, float value) {
@@ -381,10 +461,11 @@ public class ScalarStorage  {
      * </p>
      *
      * @param entityId the ID of the entity whose scalar value is being
-     * retrieved
-     * @param dest the destination array to store the scalar value
+     *                 retrieved
+     * @param dest     the destination array to store the scalar value
+     *
      * @throws IllegalArgumentException if the entity does not exist or if the
-     * {@code dest} array has fewer than 1 element
+     *                                  {@code dest} array has fewer than one element
      */
     public final synchronized void getValueOf(int entityId, float[] dest) {
         if (dest == null || dest.length < 1) {
@@ -405,8 +486,9 @@ public class ScalarStorage  {
      * </p>
      *
      * @param entityId the ID of the entity whose scalar value is being
-     * retrieved
+     *                 retrieved
      * @return the scalar value of the specified entity
+     *
      * @throws IllegalArgumentException if the entity does not exist
      */
     public final synchronized float getValueOf(int entityId) {
@@ -415,28 +497,27 @@ public class ScalarStorage  {
     }
 
     /**
-     * For debugging only; to visualise the state.
+     * Returns a string representation of the {@code ScalarStorage} state.
      *
-     * @return a string representation of the ScalarStorage state
+     * <p>
+     * This method is intended for debugging purposes. It provides a textual
+     * representation of the current state of the storage, including the
+     * {@link SparseSet} and the scalar data contained within the
+     * {@link FloatList}.
+     * </p>
+     *
+     * @return a string representation of the {@code ScalarStorage} state
      */
     @Override
-    public String toString() {
+    public final synchronized String toString() {
         StringBuilder outp = new StringBuilder();
-        outp.append("IDs:\t").append(Arrays.toString(sparseSet.sparse())).append("\n");
-
-        outp.append("Dense:\t[");
-        for (int i = 0; i < sparseSet.dense().size(); i++) {
-            outp.append(sparseSet.dense().array()[i]).append(", ");
-        }
-        if (sparseSet.dense().size() > 0) {
-            outp.delete(outp.length() - 2, outp.length());
-        }
-        outp.append("]\n");
+        outp.append(sparseSet).append("\n");
 
         outp.append("Data:\t[");
         for (int i = 0; i < scalarData.size(); i++) {
-            outp.append(scalarData.array()[i]).append(", ");
+            outp.append(scalarData.get(i)).append(", ");
         }
+
         if (scalarData.size() > 0) {
             outp.delete(outp.length() - 2, outp.length());
         }
@@ -446,4 +527,3 @@ public class ScalarStorage  {
     }
 
 }
-    
