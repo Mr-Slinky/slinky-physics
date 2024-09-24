@@ -1,7 +1,9 @@
 package com.slinky.physics.base;
 
 import com.slinky.physics.components.Component;
+import com.slinky.physics.entities.Archetype;
 import com.slinky.physics.util.IntList;
+import java.util.Arrays;
 
 /**
  * <p>
@@ -65,14 +67,14 @@ import com.slinky.physics.util.IntList;
  * with the entity's updated component configuration.
  * </p>
  * 
- * @version 1.0
+ * @version 1.1
  * @since   0.1.0
  * 
- * @author Kheagen Haskins
+ * @author  Kheagen Haskins
  * 
- * @see Engine
+ * @see     Engine
  */
-final class EntityManager {
+public final class EntityManager {
 
     // ============================== Constants ============================= //
     /**
@@ -84,6 +86,14 @@ final class EntityManager {
     public static final int ENTITY_LIMIT = 1_000_000;
 
     // ============================== Fields ================================ //
+    /**
+     * A sparse array mapping entity IDs to indices in the dense arrays. This
+     * array allows constant time (O(1)) lookups to determine if an entity is
+     * active and retrieve its position in the dense arrays. Unused slots are
+     * initialised to -1.
+     */
+    private final int[] sparse;
+
     /**
      * A dense array of active entity IDs, stored in {@code IntList} to ensure
      * efficient iteration and data locality. The indices in this list map
@@ -97,14 +107,6 @@ final class EntityManager {
      * an entity possesses.
      */
     private final IntList denseComponentMasks;
-
-    /**
-     * A sparse array mapping entity IDs to indices in the dense arrays. This
-     * array allows constant time (O(1)) lookups to determine if an entity is
-     * active and retrieve its position in the dense arrays. Unused slots are
-     * initialized to -1.
-     */
-    private final int[] sparse;
 
     /**
      * A stack of free entity IDs that have been recycled. When entities are
@@ -141,7 +143,7 @@ final class EntityManager {
      * </p>
      *
      * <p>
-     * During initialization, the sparse array is filled with {@code -1} to
+     * During initialisation, the sparse array is filled with {@code -1} to
      * indicate that no entities are mapped at any given index.
      * </p>
      *
@@ -149,7 +151,7 @@ final class EntityManager {
      * @throws IllegalArgumentException if the capacity is less than or equal to
      * zero or exceeds {@code ENTITY_LIMIT}
      */
-    EntityManager(int capacity) {
+    public EntityManager(int capacity) {
         if (capacity <= 0 || capacity > ENTITY_LIMIT) {
             throw new IllegalArgumentException(
                     "EntityManager#constructor(int capacity): capacity must be a positive number less than or equal to "
@@ -164,10 +166,7 @@ final class EntityManager {
         this.freeEntityIDs       = new IntList();
         this.nextEntityID        = 0;
 
-        // Initialize sparse array to -1 (indicating invalid entries)
-        for (int i = 0; i < capacity; i++) {
-            sparse[i] = -1;
-        }
+        Arrays.fill(sparse, -1);
     }
 
     // ============================== Getters =============================== //
@@ -178,7 +177,7 @@ final class EntityManager {
      * @param entityID the ID of the entity to check
      * @return {@code true} if the entity exists, {@code false} otherwise
      */
-    boolean hasEntity(int entityID) {
+    public boolean hasEntity(int entityID) {
         return entityID >= 0 && entityID < entityCapacity && sparse[entityID] >= 0;
     }
 
@@ -195,7 +194,7 @@ final class EntityManager {
      * @return the component bitmask of the entity
      * @throws IllegalArgumentException if the entity does not exist
      */
-    int getComponentMask(int entityID) {
+    public int getComponentMask(int entityID) {
         if (!hasEntity(entityID)) {
             throw new IllegalArgumentException(
                     "EntityManager#getComponentMask: Entity ID " + entityID + " does not exist."
@@ -205,6 +204,9 @@ final class EntityManager {
         return denseComponentMasks.get(index);
     }
 
+    public int getEntityCapacity() {
+        return entityCapacity;
+    }
     
     // ============================ API Methods ============================= //
     /**
@@ -217,32 +219,51 @@ final class EntityManager {
      * </p>
      *
      * <p>
-     * The newly created entity is initialized with no components, which is
+     * The newly created entity is initialised with no components, which is
      * represented by a component bitmask of 0.
      * </p>
      *
      * @return the unique {@code entityID} of the newly created entity
      * @throws IllegalStateException if the entity capacity has been reached
      */
-    int createEntity() {
-        int entityID;
-        if (!freeEntityIDs.isEmpty()) {
-            entityID = freeEntityIDs.pop();
-        } else {
-            if (nextEntityID >= entityCapacity) {
-                throw new IllegalStateException(
-                        "EntityManager#createEntity: Reached maximum entity capacity of " + entityCapacity
-                );
-            }
-            entityID = nextEntityID++;
-        }
+    public int createEntity() {
+        int entityID = nextId();
+        int index    = denseEntityIDs.size();
 
-        int index = denseEntityIDs.size();
         denseEntityIDs.add(entityID);
-        denseComponentMasks.add(0); // Initialize with no components
+        denseComponentMasks.add(0); // Initialise with no components
         sparse[entityID] = index;
 
         return entityID;
+    }
+    
+    /**
+     * Creates a new entity based on the provided {@code Archetype} and returns
+     * its unique {@code entityID}.
+     * <p>
+     * The method assigns components to the entity according to the bitmask
+     * defined by the archetype. It checks each {@code Component} and, if the
+     * component is present in the archetype's bitmask, the component is added
+     * to the entity. The entity ID is unique and generated internally.
+     * </p>
+     * 
+     * @param archetype the archetype that defines which components the new
+     * entity should have
+     * @return the unique {@code entityID} of the newly created entity
+     * @throws IllegalStateException if the entity capacity has been reached and
+     * no new entities can be created
+     */
+    public int createEntity(Archetype archetype) {
+        int entityId = createEntity();
+        int index, maskBefore, maskAfter;
+        for (Component comp : archetype.components()) {
+            index      = sparse[entityId];
+            maskBefore = denseComponentMasks.get(index);
+            maskAfter  = maskBefore | comp.bit();
+            
+            denseComponentMasks.set(index, maskAfter);
+        }
+        return entityId;
     }
 
     /**
@@ -260,18 +281,18 @@ final class EntityManager {
      * @return {@code true} if the entity was successfully destroyed,
      * {@code false} if the entity did not exist
      */
-    boolean destroyEntity(int entityID) {
+    public boolean destroyEntity(int entityID) {
         if (!hasEntity(entityID)) {
             return false;
         }
 
-        int index = sparse[entityID];
-        int lastIndex = denseEntityIDs.size() - 1;
+        int index        = sparse[entityID];
+        int lastIndex    = denseEntityIDs.size() - 1;
         int lastEntityID = denseEntityIDs.get(lastIndex);
 
         // Swap the last entity with the one to remove if they are not the same
         if (index != lastIndex) {
-            denseEntityIDs.set(index, lastEntityID);
+            denseEntityIDs     .set(index, lastEntityID);
             denseComponentMasks.set(index, denseComponentMasks.get(lastIndex));
             sparse[lastEntityID] = index;
         }
@@ -301,15 +322,16 @@ final class EntityManager {
      * {@code false} if the entity already had the component
      * @throws IllegalArgumentException if the entity does not exist
      */
-    boolean addComponent(int entityID, Component comp) {
+    public boolean addComponentTo(int entityID, Component comp) {
         if (!hasEntity(entityID)) {
             throw new IllegalArgumentException(
                     "EntityManager#addComponent: Entity ID " + entityID + " does not exist."
             );
         }
-        int index = sparse[entityID];
+        
+        int index      = sparse[entityID];
         int maskBefore = denseComponentMasks.get(index);
-        int maskAfter = maskBefore | comp.bit();
+        int maskAfter  = maskBefore | comp.bit();
         denseComponentMasks.set(index, maskAfter);
         return maskBefore != maskAfter;
     }
@@ -330,12 +352,13 @@ final class EntityManager {
      * {@code false} if the entity did not have the component
      * @throws IllegalArgumentException if the entity does not exist
      */
-    boolean removeComponent(int entityID, Component comp) {
+    public boolean removeComponent(int entityID, Component comp) {
         if (!hasEntity(entityID)) {
             throw new IllegalArgumentException(
                     "EntityManager#removeComponent: Entity ID " + entityID + " does not exist."
             );
         }
+        
         int index = sparse[entityID];
         int maskBefore = denseComponentMasks.get(index);
         int maskAfter = maskBefore & ~comp.bit();
@@ -351,13 +374,42 @@ final class EntityManager {
      * @return {@code true} if the entity has the component, {@code false}
      * otherwise
      */
-    boolean hasComponent(int entityID, Component comp) {
+    public boolean hasComponent(int entityID, Component comp) {
         if (!hasEntity(entityID)) {
             return false;
         }
+        
         int index = sparse[entityID];
-        int mask = denseComponentMasks.get(index);
+        int mask  = denseComponentMasks.get(index);
         return (mask & comp.bit()) != 0;
+    }
+    
+    /**
+     * Generates the next available entity ID.
+     * <p>
+     * If there are any previously freed entity IDs, one will be reused by
+     * popping from the `freeEntityIDs` stack. If no free IDs are available, a
+     * new one is generated by incrementing `nextEntityID`. If the entity
+     * capacity has been reached, an exception is thrown.
+     *
+     * @return the next available entity ID
+     * @throws IllegalStateException if the maximum entity capacity has been
+     *         reached
+     */
+    private int nextId() {
+        int entityId;
+        if (!freeEntityIDs.isEmpty()) {
+            entityId = freeEntityIDs.pop();
+        } else {
+            if (nextEntityID >= entityCapacity) {
+                throw new IllegalStateException(
+                        "EntityManager#createEntity: Reached maximum entity capacity of " + entityCapacity
+                );
+            }
+            entityId = nextEntityID++;
+        }
+        
+        return entityId;
     }
     
 }
