@@ -43,7 +43,7 @@ public class SpringManagerTest {
     @Test
     @DisplayName("Pseudo End to End Test")
     void testClass() {
-        springMan.add(springEntityId, pointId1, pointId2, 1, 1);
+        springMan.add(springEntityId, pointId1, pointId2, 1f, 1f);
     }
 
     // ========================[ Accessor Method Tests ]========================= \\
